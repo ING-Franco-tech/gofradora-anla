@@ -1,0 +1,2388 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Gofradora ANLA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Dos mundos: el simulador es un taller oscuro (acero azulado + ámbar de seguridad);
+   el informe es una hoja técnica clara. Un solo aspecto deliberado por vista, sin cambio de tema. */
+:root {
+  color-scheme: dark;
+  --bg: #0d1114;
+  --panel: rgba(17, 22, 27, 0.9);
+  --panel-solid: #141a20;
+  --line: #27313a;
+  --line-strong: #3a4652;
+  --fg: #e4e9ee;
+  --muted: #8b97a3;
+  --accent: #f0a43a;
+  --accent-ink: #1b1204;
+  --steel: #7fb2d4;
+  --ok: #5cc28a;
+  --warn: #ff8466;
+  /* hoja del informe */
+  --paper-bg: #e9edf0;
+  --paper: #ffffff;
+  --ink: #18212a;
+  --ink-2: #47535f;
+  --ink-3: #6f7b86;
+  --rule: #d5dce2;
+  --rule-strong: #9eabb6;
+  --tint: #f3f6f8;
+  --p-accent: #a35f00;
+  --p-blue: #1d5f8a;
+  --p-ok: #1d7a49;
+  --p-bad: #b4372a;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --r: 10px;
+  --bar-h: 52px;
+}
+html, body { height: 100%; }
+body { margin: 0; overflow: hidden; background: var(--bg); color: var(--fg); font: 14px/1.45 var(--font-body); }
+button, input, select { font-family: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── barra superior ── */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+  height: calc(var(--bar-h) + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 16px 0;
+  box-sizing: border-box; display: flex; align-items: center; gap: 18px;
+  background: #0a0d10; border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: baseline; gap: 10px; white-space: nowrap; min-width: 0; }
+.brand b { font: 700 21px/1 var(--font-display); letter-spacing: .06em; text-transform: uppercase; }
+.brand { overflow: hidden; }
+.brand b { overflow: hidden; text-overflow: ellipsis; }
+.brand span { font: 400 11px/1 var(--font-mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.tabs { display: flex; gap: 4px; margin-left: auto; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 9px; padding: 3px; }
+.tab { appearance: none; border: 0; background: transparent; color: var(--muted); padding: 7px 14px; border-radius: 6px; font: 600 13px/1 var(--font-body); cursor: pointer; white-space: nowrap; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.tab:not([aria-selected="true"]):hover { color: var(--fg); }
+
+/* ── vista simulador ── */
+#sim { position: fixed; inset: calc(var(--bar-h) + env(safe-area-inset-top, 0px)) 0 0 0; }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.card {
+  position: absolute; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+#info { top: 14px; left: 14px; width: 292px; padding: 13px 15px; display: grid; gap: 9px; }
+.eyebrow { font: 500 10.5px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+#info h1 { margin: 0; font: 700 27px/1 var(--font-display); text-transform: uppercase; letter-spacing: .01em; }
+#info p { margin: 0; color: var(--muted); font-size: 12.5px; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 0; }
+.stats div { display: grid; gap: 1px; min-width: 0; }
+.stats dt { font: 500 9.5px/1.2 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.stats dd { margin: 0; font: 500 14px/1.25 var(--font-mono); font-variant-numeric: tabular-nums; }
+.stats dd small { font-size: 10.5px; color: var(--muted); }
+.chip { display: inline-flex; align-items: center; gap: 6px; font: 600 11.5px/1 var(--font-body); padding: 5px 8px; border-radius: 999px; border: 1px solid; width: fit-content; }
+.chip.ok { color: var(--ok); border-color: rgba(92,194,138,.45); background: rgba(92,194,138,.08); }
+.chip.bad { color: var(--warn); border-color: rgba(255,132,102,.45); background: rgba(255,132,102,.08); }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.hint { font: 400 10.5px/1.4 var(--font-mono); color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+
+#controls { top: 14px; right: 14px; bottom: 14px; width: 318px; overflow-y: auto; padding: 2px 0 10px; scrollbar-width: thin; }
+.group { padding: 12px 15px; border-bottom: 1px solid var(--line); display: grid; gap: 9px; }
+.group:last-of-type { border-bottom: 0; }
+.group h2 { margin: 0; font: 600 15px/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.group h2 span { font: 400 11px/1.2 var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--muted); text-align: right; }
+.field { display: grid; gap: 5px; }
+.field .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 12.5px; }
+.field output { font: 500 12.5px/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--steel); white-space: nowrap; }
+input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); cursor: pointer; height: 18px; }
+#controls input[type=text], #controls select {
+  width: 100%; box-sizing: border-box; background: var(--panel-solid); border: 1px solid var(--line-strong); color: var(--fg);
+  border-radius: 7px; padding: 7px 9px; font-size: 13px;
+}
+#controls input[type=text] { font: 500 15px/1 var(--font-mono); letter-spacing: .18em; text-transform: uppercase; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 5px; }
+.btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn {
+  appearance: none; flex: 1 1 auto; border: 1px solid var(--line-strong); background: var(--panel-solid); color: var(--fg);
+  border-radius: 7px; padding: 7px 10px; font: 500 12px/1.15 var(--font-body); cursor: pointer; white-space: nowrap;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: rgba(240,164,58,.1); }
+.btn small { display: block; font: 400 10px/1.2 var(--font-mono); color: var(--muted); margin-top: 2px; }
+.readout { font: 400 11.5px/1.5 var(--font-mono); color: var(--muted); }
+.readout b { color: var(--fg); font-weight: 500; }
+.pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.pad .btn { padding: 7px 4px; }
+#selGroup[data-empty="true"] .pad, #selGroup[data-empty="true"] .btns { opacity: .4; pointer-events: none; }
+.kbd { font: 500 10px/1 var(--font-mono); border: 1px solid var(--line-strong); border-radius: 4px; padding: 1px 4px; color: var(--fg); }
+#notes { display: grid; gap: 6px; padding: 4px 15px 0; }
+#notes:empty { display: none; }
+.note { font-size: 12px; line-height: 1.4; padding: 7px 9px; border-radius: 7px; border: 1px solid var(--line); color: var(--muted); }
+.note.warn { border-color: rgba(255,132,102,.45); color: var(--warn); background: rgba(255,132,102,.07); }
+.note.info { border-color: rgba(127,178,212,.35); color: var(--steel); background: rgba(127,178,212,.06); }
+
+#dev { left: 14px; right: 346px; bottom: 14px; padding: 9px 11px 7px; max-width: 980px; }
+#dev canvas { width: 100%; height: 268px; display: block; cursor: crosshair; outline: none; }
+#devMsg { position: absolute; right: 12px; top: 8px; font: 500 11px/1 var(--font-mono); color: var(--warn); opacity: 0; transition: opacity .2s; }
+#devMsg.show { opacity: 1; }
+#tags { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.tag {
+  position: absolute; left: 0; top: 0; white-space: nowrap; font: 500 11px/1 var(--font-mono); color: var(--fg);
+  background: var(--panel); border: 1px solid var(--line-strong); padding: 5px 7px; border-radius: 6px;
+}
+.tag::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 1px; height: 7px; background: var(--muted); }
+.tag.hot { border-color: var(--accent); color: var(--accent); }
+#tags.off { display: none; }
+#drawerToggle { display: none; }
+#fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
+
+/* ── vista informe ── */
+#report { position: fixed; inset: calc(var(--bar-h) + env(safe-area-inset-top, 0px)) 0 0 0; overflow-y: auto; background: var(--paper-bg); color: var(--ink); color-scheme: light; }
+.rp-wrap { display: grid; grid-template-columns: 220px minmax(0, 860px); gap: 28px; justify-content: center; padding: 28px 16px 64px; }
+.toc { position: sticky; top: 20px; align-self: start; font-size: 12.5px; }
+.toc b { display: block; font: 600 11px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+.toc a { display: grid; grid-template-columns: 26px 1fr; padding: 4px 0; color: var(--ink-2); text-decoration: none; }
+.toc a span { font: 500 12px/1.4 var(--font-mono); color: var(--ink-3); }
+.toc a:hover { color: var(--p-blue); }
+.sheet { background: var(--paper); border: 1px solid var(--rule); box-shadow: 0 1px 2px rgba(20,30,40,.06), 0 12px 40px rgba(20,30,40,.06); padding: 44px 56px 56px; min-width: 0; }
+.doc-head { display: grid; gap: 14px; border-bottom: 2px solid var(--ink); padding-bottom: 20px; }
+.doc-code { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font: 500 11.5px/1 var(--font-mono); letter-spacing: .06em; color: var(--ink-3); text-transform: uppercase; }
+.doc-head h1 { margin: 0; font: 700 40px/1.02 var(--font-display); letter-spacing: .005em; text-transform: uppercase; text-wrap: balance; color: var(--ink); }
+.doc-head .sub { margin: 0; font-size: 16px; line-height: 1.45; color: var(--ink-2); max-width: 62ch; }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--rule); font-size: 12px; }
+.meta div { padding: 8px 10px; border-right: 1px solid var(--rule); min-width: 0; }
+.meta div:last-child { border-right: 0; }
+.meta dt { font: 500 10px/1.2 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.meta dd { margin: 3px 0 0; color: var(--ink); }
+.abstract { margin-top: 22px; background: var(--tint); border-left: 3px solid var(--p-accent); padding: 14px 18px; font-size: 14.5px; line-height: 1.6; }
+.abstract p { margin: 0; }
+.abstract p + p { margin-top: 8px; }
+.sheet section { margin-top: 38px; }
+.sheet h2 { display: grid; grid-template-columns: 40px 1fr; align-items: baseline; margin: 0 0 12px; font: 600 25px/1.1 var(--font-display); letter-spacing: .02em; text-transform: uppercase; color: var(--ink); text-wrap: balance; }
+.sheet h2 span { font: 500 16px/1 var(--font-mono); color: var(--p-accent); letter-spacing: 0; }
+.sheet p { margin: 0 0 12px; font-size: 15px; line-height: 1.62; color: var(--ink); max-width: 72ch; }
+.sheet p.small { font-size: 13px; color: var(--ink-2); }
+.sheet em.v { font-style: normal; font-family: var(--font-mono); font-size: .93em; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--tint); padding: 0 4px; border-radius: 3px; }
+.eq { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; margin: 12px 0 16px; padding: 10px 0 10px 18px; border-left: 2px solid var(--rule); overflow-x: auto; }
+.eq math { font-size: 17px; justify-self: start; }
+.eq .res { grid-column: 1; font: 400 13px/1.4 var(--font-mono); color: var(--ink-2); }
+.eq .no { grid-column: 2; grid-row: 1 / span 2; font: 500 12.5px/1 var(--font-mono); color: var(--ink-3); }
+.tbl { margin: 14px 0 20px; overflow-x: auto; }
+.tbl table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.tbl caption, .fig figcaption { caption-side: top; text-align: left; font: 600 12.5px/1.4 var(--font-body); color: var(--ink); padding-bottom: 8px; }
+.tbl caption span, .fig figcaption span { font-family: var(--font-mono); font-weight: 500; color: var(--p-accent); margin-right: 6px; }
+.tbl th { font: 600 12px/1.3 var(--font-body); letter-spacing: 0; color: var(--ink-2); text-align: left; padding: 8px 9px; border-bottom: 1.5px solid var(--ink); vertical-align: bottom; }
+.tbl td { padding: 7px 9px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.tbl td:first-child { min-width: 128px; }
+.tbl table th.n { white-space: normal; font-family: var(--font-body); }
+.tbl.compact th, .tbl.compact td { padding: 7px 6px; }
+.tbl.compact td:first-child { min-width: 104px; }
+.tbl td.n { font-size: 12.5px; }
+.tbl td.n, .tbl th.n { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tbl tr.sel td { background: #fff6e6; }
+.tbl tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--p-accent); }
+.tbl td .ok { color: var(--p-ok); font-weight: 600; }
+.tbl td .bad { color: var(--p-bad); font-weight: 600; }
+.tbl tfoot td { font-size: 12px; color: var(--ink-2); border-bottom: 0; padding-top: 8px; }
+.tbl input { width: 92px; box-sizing: border-box; border: 1px solid var(--rule-strong); border-radius: 5px; padding: 4px 6px; font: 500 13px/1 var(--font-mono); text-align: right; background: #fff; color: var(--ink); }
+.tbl input:focus { border-color: var(--p-blue); outline: 2px solid rgba(29,95,138,.18); outline-offset: 0; }
+.tbl select { border: 1px solid var(--rule-strong); border-radius: 5px; padding: 4px 6px; font: 500 13px/1 var(--font-body); background: #fff; color: var(--ink); }
+.fig { margin: 18px 0 24px; }
+.fig .frame { border: 1px solid var(--rule); background: #fbfcfd; overflow-x: auto; }
+.fig svg { display: block; width: 100%; height: auto; min-width: 560px; }
+.fig .cap2 { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; line-height: 1.5; }
+.bars { display: grid; gap: 6px; padding: 14px 16px; }
+.bar-row { display: grid; grid-template-columns: 170px minmax(0, 1fr) 54px; align-items: center; gap: 10px; font-size: 12.5px; position: relative; }
+.bar-row .lab { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { position: relative; height: 16px; background: linear-gradient(90deg, var(--rule) 1px, transparent 1px) 0 0 / 20% 100%; border-left: 1px solid var(--rule-strong); }
+.bar-fill { position: absolute; left: 0; top: 2px; bottom: 2px; background: #8fa3b3; border-radius: 0 4px 4px 0; }
+.bar-row.win .bar-fill { background: var(--p-accent); }
+.bar-row.fail .bar-fill { background: repeating-linear-gradient(45deg, #c9d2da 0 4px, #e6ebef 4px 8px); }
+.bar-row .val { font: 500 12.5px/1 var(--font-mono); text-align: right; color: var(--ink); }
+.bar-axis { display: grid; grid-template-columns: 170px minmax(0, 1fr) 54px; gap: 10px; font: 400 10.5px/1 var(--font-mono); color: var(--ink-3); }
+.bar-axis div:nth-child(2) { display: flex; justify-content: space-between; }
+.bar-tip { position: absolute; z-index: 5; pointer-events: none; background: var(--ink); color: #fff; font: 400 11.5px/1.45 var(--font-mono); padding: 8px 10px; border-radius: 6px; white-space: nowrap; box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+.refs { padding-left: 22px; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
+.refs li { margin-bottom: 4px; }
+.refs a { color: var(--p-blue); }
+.sign { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 36px; border-top: 1px solid var(--rule); }
+.sign div { padding: 34px 10px 8px; border-right: 1px solid var(--rule); font: 500 10.5px/1.3 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.sign div:last-child { border-right: 0; }
+
+@media (max-width: 1180px) { .rp-wrap { grid-template-columns: minmax(0, 860px); } .toc { display: none; } }
+@media (max-width: 1100px) { #dev { right: 346px; } }
+@media (max-width: 860px) {
+  .brand span { display: none; }
+  .brand b { font-size: 17px; }
+  #topbar { gap: 10px; padding-left: 12px; padding-right: 12px; }
+  .tab { padding: 7px 10px; }
+  #info { left: 10px; right: 10px; width: auto; padding: 10px 12px; gap: 6px; }
+  #info p, #info .hint { display: none; }
+  #info h1 { font-size: 21px; }
+  .stats { grid-template-columns: repeat(3, 1fr); gap: 6px 10px; }
+  .stats dd { font-size: 12.5px; }
+  #controls { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 64%; border-radius: 14px 14px 0 0; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); transform: translateY(105%); transition: transform .28s ease; }
+  #controls.open { transform: none; }
+  #dev { display: none; }
+  #controls #dev { display: block; position: static; margin: 10px 12px 0; box-shadow: none; }
+  #drawerToggle { display: block; position: absolute; right: 12px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
+  #controls.open ~ #drawerToggle { bottom: calc(64% + 10px); }
+  .sheet { padding: 26px 18px 36px; }
+  .doc-head h1 { font-size: 30px; }
+  .meta { grid-template-columns: 1fr 1fr; }
+  .meta div:nth-child(2) { border-right: 0; }
+  .meta div:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }
+  .bar-row, .bar-axis { grid-template-columns: 110px minmax(0, 1fr) 44px; }
+  .sign { grid-template-columns: 1fr; }
+  .sign div { border-right: 0; border-bottom: 1px solid var(--rule); }
+}
+@media (prefers-reduced-motion: reduce) { #controls { transition: none; } }
+</style>
+
+<header id="topbar">
+  <div class="brand"><b>Gofradora ANLA</b><span>Rodillo NPS 10 · cara 800 mm · placas intercambiables · rev. 1</span></div>
+  <nav class="tabs" role="tablist" aria-label="Vistas">
+    <button class="tab" role="tab" id="tabSim" aria-selected="true" aria-controls="sim">Simulador</button>
+    <button class="tab" role="tab" id="tabRep" aria-selected="false" aria-controls="report">Informe técnico</button>
+  </nav>
+</header>
+
+<main id="sim" role="tabpanel" aria-labelledby="tabSim">
+  <canvas id="gl" aria-label="Vista 3D de la gofradora: rodillo grabador con placas ANLA, rodillo de presión y bolsas"></canvas>
+  <div id="tags"></div>
+
+  <section id="info" class="card" aria-label="Ficha de la máquina">
+    <div class="eyebrow">Prototipo · bolsas de punto de pago</div>
+    <h1>Rodillo de marcado</h1>
+    <p>Las placas ANLA se atornillan en la malla de agujeros del tubo. Cada placa deja su marca cuando pasa por la línea de contacto con el rodillo de poliuretano.</p>
+    <dl class="stats">
+      <div><dt>Tubo</dt><dd>NPS 10 <small>Ø273</small></dd></div>
+      <div><dt>Malla M6</dt><dd>36 × 32</dd></div>
+      <div><dt>Placas</dt><dd id="stPlates">–</dd></div>
+      <div><dt>Marcas / bolsa</dt><dd id="stPerBag">–</dd></div>
+      <div><dt>Producción</dt><dd id="stRate">–</dd></div>
+      <div><dt>Fuerza nip</dt><dd id="stForce">–</dd></div>
+    </dl>
+    <div id="stStatus" class="chip ok">Cada bolsa lleva marca</div>
+    <div class="hint">Vista 3D: arrastra para orbitar, rueda para acercar.<br>Malla inferior: clic en un hueco monta una placa, clic en una placa la selecciona, arrástrala para moverla. Las flechas del teclado mueven la seleccionada; Supr la quita.</div>
+  </section>
+
+  <section id="dev" class="card" aria-label="Desarrollo del rodillo y salida">
+    <canvas id="dg" aria-label="Malla desarrollada del rodillo: clic para poner o quitar placas"></canvas>
+    <div id="devMsg" aria-live="polite"></div>
+  </section>
+
+  <aside id="controls" class="card" aria-label="Controles">
+    <div class="group">
+      <h2>Bolsa <span id="bagName">Punto de pago</span></h2>
+      <select id="bagSel" aria-label="Tamaño de bolsa"></select>
+      <div class="field">
+        <label class="row" for="bagW">Ancho <output id="oBagW">500 mm</output></label>
+        <input type="range" id="bagW" min="250" max="760" step="10" value="500">
+      </div>
+      <div class="field">
+        <label class="row" for="bagL">Alto, con asas <output id="oBagL">700 mm</output></label>
+        <input type="range" id="bagL" min="300" max="1000" step="10" value="700">
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Marcado <span id="modeRead"></span></h2>
+      <div class="seg" role="group" aria-label="Modo de marcado">
+        <button class="btn" type="button" data-mode="reg" aria-pressed="true">Con registro<small>altura fija</small></button>
+        <button class="btn" type="button" data-mode="cont" aria-pressed="false">Continuo<small>altura variable</small></button>
+      </div>
+      <div class="field" id="hMarkField">
+        <label class="row" for="hMark">Altura de la marca desde el fondo <output id="oHMark">280 mm</output></label>
+        <input type="range" id="hMark" min="20" max="900" step="5" value="280">
+        <button class="btn" id="hStd" type="button">Usar altura estándar de esta talla</button>
+      </div>
+      <div class="readout" id="modeInfo"></div>
+    </div>
+
+    <div class="group">
+      <h2>Logo <span id="plateDims">90 × 34 mm</span></h2>
+      <div class="field">
+        <label class="row" for="text">Código en relieve <output>máx. 10</output></label>
+        <input type="text" id="text" maxlength="10" value="ANLA" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label class="row" for="hLetter"><span id="hLabel">Alto de letra</span> <output id="oH">20 mm</output></label>
+        <input type="range" id="hLetter" min="10" max="40" step="1" value="20">
+      </div>
+      <div class="seg" role="group" aria-label="Tamaños rápidos">
+        <button class="btn" type="button" data-h="12">S<small>12 mm</small></button>
+        <button class="btn" type="button" data-h="20">M<small>20 mm</small></button>
+        <button class="btn" type="button" data-h="32">L<small>32 mm</small></button>
+      </div>
+      <div class="readout" id="plateRead"></div>
+    </div>
+
+    <div class="group">
+      <h2>Distribución <span id="layoutRead">–</span></h2>
+      <div class="field">
+        <div class="row">Logos a lo ancho de la bolsa <output id="oLanes">1</output></div>
+        <div class="seg" role="group" aria-label="Carriles">
+          <button class="btn" type="button" data-lanes="1">1</button><button class="btn" type="button" data-lanes="2">2</button><button class="btn" type="button" data-lanes="3">3</button><button class="btn" type="button" data-lanes="4">4</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="row" for="nRev">Logos por vuelta, reparto uniforme <output id="oRev">6</output></label>
+        <input type="range" id="nRev" min="1" max="18" step="1" value="6">
+        <div class="readout" id="revInfo"></div>
+      </div>
+      <div class="field">
+        <label class="row" for="xOff">Desplazamiento lateral <output id="oXOff">0 mm</output></label>
+        <input type="range" id="xOff" min="-175" max="175" step="25" value="0">
+        <div class="btns"><button class="btn" id="xLeft" type="button">◀ 25 mm</button><button class="btn" id="xCenter" type="button">Centrar</button><button class="btn" id="xRight" type="button">25 mm ▶</button></div>
+      </div>
+      <div class="btns">
+        <button class="btn primary" id="auto" type="button">Distribuir para esta bolsa</button>
+        <button class="btn" id="clear" type="button">Quitar todas</button>
+      </div>
+      <div class="readout" id="layoutRule"></div>
+    </div>
+
+    <div class="group" id="selGroup">
+      <h2>Placa seleccionada <span id="selRead">ninguna</span></h2>
+      <div class="readout" id="selInfo">Haz clic en una placa de la malla inferior para seleccionarla, o en un hueco para montar una nueva. También puedes arrastrarla.</div>
+      <div class="pad" role="group" aria-label="Mover placa">
+        <button class="btn" type="button" data-move="-1,0" title="Fila anterior (−10°)">▲ fila</button>
+        <button class="btn" type="button" data-move="0,-1" title="25 mm hacia un lado">◀ 25</button>
+        <button class="btn" type="button" data-move="0,1" title="25 mm hacia el otro lado">25 ▶</button>
+        <button class="btn" type="button" data-move="1,0" title="Fila siguiente (+10°)">fila ▼</button>
+      </div>
+      <div class="btns">
+        <button class="btn" id="dupUp" type="button">Duplicar en otra fila</button>
+        <button class="btn" id="dupSide" type="button">Duplicar al lado</button>
+        <button class="btn" id="delSel" type="button">Quitar</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Marcha</h2>
+      <div class="field">
+        <label class="row" for="speed">Velocidad de línea <output id="oSpeed">60 m/min</output></label>
+        <input type="range" id="speed" min="10" max="120" step="5" value="60">
+      </div>
+      <div class="seg" role="group" aria-label="Escala de tiempo">
+        <button class="btn" type="button" data-ts="1" aria-pressed="false">Tiempo real</button>
+        <button class="btn" type="button" data-ts="0.25" aria-pressed="true">× 1/4</button>
+        <button class="btn" type="button" data-ts="0.08" aria-pressed="false">× 1/12</button>
+      </div>
+      <div class="btns">
+        <button class="btn primary" id="run" type="button">Pausar</button>
+        <button class="btn" id="reset" type="button">Vaciar línea</button>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Vista</h2>
+      <div class="btns" id="views">
+        <button class="btn" type="button" data-view="general" aria-pressed="true">General</button>
+        <button class="btn" type="button" data-view="nip" aria-pressed="false">Contacto</button>
+        <button class="btn" type="button" data-view="plates" aria-pressed="false">Placas</button>
+        <button class="btn" type="button" data-view="out" aria-pressed="false">Salida</button>
+        <button class="btn" type="button" data-view="drive" aria-pressed="false">Transmisión</button>
+      </div>
+      <div class="btns"><button class="btn" id="tagsBtn" type="button" aria-pressed="true">Etiquetas</button></div>
+    </div>
+    <div id="notes" aria-live="polite"></div>
+  </aside>
+  <button class="btn primary" id="drawerToggle" type="button" aria-controls="controls" aria-expanded="false">Ajustes</button>
+</main>
+
+<div id="report" role="tabpanel" aria-labelledby="tabRep" hidden>
+  <div class="rp-wrap">
+    <nav class="toc" id="toc" aria-label="Contenido del informe"></nav>
+    <article class="sheet" id="sheet"></article>
+  </div>
+</div>
+
+<template id="figPlacaTpl"><svg role="img" aria-label="Esquema de la placa ANLA sobre el tubo NPS 10" xmlns="http://www.w3.org/2000/svg" viewBox="0 96 1400 912" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<defs>
+<marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L10,5 L0,9 z" fill="#0b6fa4"/></marker>
+<marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L10,5 L0,9 z" fill="#c0392b"/></marker>
+<pattern id="hz" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#c0392b" stroke-width="1.5"/></pattern>
+<pattern id="hs" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#8fa0ae" stroke-width="1"/></pattern>
+</defs>
+<rect width="1400" height="1016" fill="#f3f5f7"/>
+<text x="30.0" y="42.0" font-size="26" fill="#1b2733" text-anchor="start" font-weight="700" >Placa de logo ANLA · ajuste curvo sobre el rodillo de marcado</text>
+<text x="30.0" y="68.0" font-size="15" fill="#5c6b78" text-anchor="start" font-weight="400" >Tubo NPS 10 Sch 40: Ø273,1 × 9,27 mm · circunferencia 857,8 mm · 36 filas de agujeros cada 10° (paso 23,83 mm) · M6 cada 25 mm a lo largo del eje</text>
+<text x="30.0" y="90.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="400" >Esquema de diseño previo. Medidas en milímetros; las alturas de relieve y los espesores son valores de partida editables.</text>
+<rect x="30" y="104" width="610" height="490" rx="8" fill="#fff" stroke="#c9d2da"/>
+<text x="46.0" y="131.0" font-size="16" fill="#1b2733" text-anchor="start" font-weight="700" letter-spacing=".04em">A · VISTA DE EXTREMO DEL RODILLO</text>
+<path d="M79.34375,392 a170.65625,170.65625 0 1,0 341.3125,0 a170.65625,170.65625 0 1,0 -341.3125,0 Z M90.93124999999998,392 a159.06875000000002,159.06875000000002 0 1,0 318.13750000000005,0 a159.06875000000002,159.06875000000002 0 1,0 -318.13750000000005,0 Z" fill="#b7c2cc" fill-rule="evenodd" stroke="#1b2733" stroke-width="1.4"/>
+<line x1="395.1" y1="392.0" x2="424.7" y2="392.0" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="408.6" y1="392.0" x2="421.2" y2="392.0" stroke="#fff" stroke-width="7.5"/>
+<line x1="408.6" y1="392.0" x2="421.2" y2="392.0" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="392.9" y1="366.8" x2="422.0" y2="361.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="406.2" y1="364.5" x2="418.6" y2="362.3" stroke="#fff" stroke-width="7.5"/>
+<line x1="406.2" y1="364.5" x2="418.6" y2="362.3" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="386.3" y1="342.4" x2="414.1" y2="332.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="399.0" y1="337.8" x2="410.8" y2="333.5" stroke="#fff" stroke-width="7.5"/>
+<line x1="399.0" y1="337.8" x2="410.8" y2="333.5" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="375.6" y1="319.5" x2="401.3" y2="304.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="387.3" y1="312.7" x2="398.2" y2="306.4" stroke="#fff" stroke-width="7.5"/>
+<line x1="387.3" y1="312.7" x2="398.2" y2="306.4" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="361.1" y1="298.8" x2="383.8" y2="279.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="371.5" y1="290.1" x2="381.1" y2="282.0" stroke="#fff" stroke-width="7.5"/>
+<line x1="371.5" y1="290.1" x2="381.1" y2="282.0" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="343.2" y1="280.9" x2="362.3" y2="258.2" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="351.9" y1="270.5" x2="360.0" y2="260.9" stroke="#fff" stroke-width="7.5"/>
+<line x1="351.9" y1="270.5" x2="360.0" y2="260.9" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="322.5" y1="266.4" x2="337.3" y2="240.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="329.3" y1="254.7" x2="335.6" y2="243.8" stroke="#fff" stroke-width="7.5"/>
+<line x1="329.3" y1="254.7" x2="335.6" y2="243.8" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="299.6" y1="255.7" x2="309.7" y2="227.9" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="304.2" y1="243.0" x2="308.5" y2="231.2" stroke="#fff" stroke-width="7.5"/>
+<line x1="304.2" y1="243.0" x2="308.5" y2="231.2" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="275.2" y1="249.1" x2="280.3" y2="220.0" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="277.5" y1="235.8" x2="279.7" y2="223.4" stroke="#fff" stroke-width="7.5"/>
+<line x1="277.5" y1="235.8" x2="279.7" y2="223.4" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="250.0" y1="246.9" x2="250.0" y2="217.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="250.0" y1="233.4" x2="250.0" y2="220.8" stroke="#fff" stroke-width="7.5"/>
+<line x1="250.0" y1="233.4" x2="250.0" y2="220.8" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="224.8" y1="249.1" x2="219.7" y2="220.0" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="222.5" y1="235.8" x2="220.3" y2="223.4" stroke="#fff" stroke-width="7.5"/>
+<line x1="222.5" y1="235.8" x2="220.3" y2="223.4" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="200.4" y1="255.7" x2="190.3" y2="227.9" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="195.8" y1="243.0" x2="191.5" y2="231.2" stroke="#fff" stroke-width="7.5"/>
+<line x1="195.8" y1="243.0" x2="191.5" y2="231.2" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="177.5" y1="266.4" x2="162.7" y2="240.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="170.7" y1="254.7" x2="164.4" y2="243.8" stroke="#fff" stroke-width="7.5"/>
+<line x1="170.7" y1="254.7" x2="164.4" y2="243.8" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="156.8" y1="280.9" x2="137.7" y2="258.2" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="148.1" y1="270.5" x2="140.0" y2="260.9" stroke="#fff" stroke-width="7.5"/>
+<line x1="148.1" y1="270.5" x2="140.0" y2="260.9" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="138.9" y1="298.8" x2="116.2" y2="279.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="128.5" y1="290.1" x2="118.9" y2="282.0" stroke="#fff" stroke-width="7.5"/>
+<line x1="128.5" y1="290.1" x2="118.9" y2="282.0" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="124.4" y1="319.5" x2="98.7" y2="304.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="112.7" y1="312.7" x2="101.8" y2="306.4" stroke="#fff" stroke-width="7.5"/>
+<line x1="112.7" y1="312.7" x2="101.8" y2="306.4" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="113.7" y1="342.4" x2="85.9" y2="332.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="101.0" y1="337.8" x2="89.2" y2="333.5" stroke="#fff" stroke-width="7.5"/>
+<line x1="101.0" y1="337.8" x2="89.2" y2="333.5" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="107.1" y1="366.8" x2="78.0" y2="361.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="93.8" y1="364.5" x2="81.4" y2="362.3" stroke="#fff" stroke-width="7.5"/>
+<line x1="93.8" y1="364.5" x2="81.4" y2="362.3" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="104.9" y1="392.0" x2="75.3" y2="392.0" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="91.4" y1="392.0" x2="78.8" y2="392.0" stroke="#fff" stroke-width="7.5"/>
+<line x1="91.4" y1="392.0" x2="78.8" y2="392.0" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="107.1" y1="417.2" x2="78.0" y2="422.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="93.8" y1="419.5" x2="81.4" y2="421.7" stroke="#fff" stroke-width="7.5"/>
+<line x1="93.8" y1="419.5" x2="81.4" y2="421.7" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="113.7" y1="441.6" x2="85.9" y2="451.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="101.0" y1="446.2" x2="89.2" y2="450.5" stroke="#fff" stroke-width="7.5"/>
+<line x1="101.0" y1="446.2" x2="89.2" y2="450.5" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="124.4" y1="464.5" x2="98.7" y2="479.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="112.7" y1="471.3" x2="101.8" y2="477.6" stroke="#fff" stroke-width="7.5"/>
+<line x1="112.7" y1="471.3" x2="101.8" y2="477.6" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="138.9" y1="485.2" x2="116.2" y2="504.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="128.5" y1="493.9" x2="118.9" y2="502.0" stroke="#fff" stroke-width="7.5"/>
+<line x1="128.5" y1="493.9" x2="118.9" y2="502.0" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="156.8" y1="503.1" x2="137.7" y2="525.8" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="148.1" y1="513.5" x2="140.0" y2="523.1" stroke="#fff" stroke-width="7.5"/>
+<line x1="148.1" y1="513.5" x2="140.0" y2="523.1" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="177.5" y1="517.6" x2="162.7" y2="543.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="170.7" y1="529.3" x2="164.4" y2="540.2" stroke="#fff" stroke-width="7.5"/>
+<line x1="170.7" y1="529.3" x2="164.4" y2="540.2" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="200.4" y1="528.3" x2="190.3" y2="556.1" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="195.8" y1="541.0" x2="191.5" y2="552.8" stroke="#fff" stroke-width="7.5"/>
+<line x1="195.8" y1="541.0" x2="191.5" y2="552.8" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="224.8" y1="534.9" x2="219.7" y2="564.0" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="222.5" y1="548.2" x2="220.3" y2="560.6" stroke="#fff" stroke-width="7.5"/>
+<line x1="222.5" y1="548.2" x2="220.3" y2="560.6" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="250.0" y1="537.1" x2="250.0" y2="566.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="250.0" y1="550.6" x2="250.0" y2="563.2" stroke="#fff" stroke-width="7.5"/>
+<line x1="250.0" y1="550.6" x2="250.0" y2="563.2" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="275.2" y1="534.9" x2="280.3" y2="564.0" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="277.5" y1="548.2" x2="279.7" y2="560.6" stroke="#fff" stroke-width="7.5"/>
+<line x1="277.5" y1="548.2" x2="279.7" y2="560.6" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="299.6" y1="528.3" x2="309.7" y2="556.1" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="304.2" y1="541.0" x2="308.5" y2="552.8" stroke="#fff" stroke-width="7.5"/>
+<line x1="304.2" y1="541.0" x2="308.5" y2="552.8" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="322.5" y1="517.6" x2="337.3" y2="543.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="329.3" y1="529.3" x2="335.6" y2="540.2" stroke="#fff" stroke-width="7.5"/>
+<line x1="329.3" y1="529.3" x2="335.6" y2="540.2" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="343.2" y1="503.1" x2="362.3" y2="525.8" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="351.9" y1="513.5" x2="360.0" y2="523.1" stroke="#fff" stroke-width="7.5"/>
+<line x1="351.9" y1="513.5" x2="360.0" y2="523.1" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="361.1" y1="485.2" x2="383.8" y2="504.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="371.5" y1="493.9" x2="381.1" y2="502.0" stroke="#fff" stroke-width="7.5"/>
+<line x1="371.5" y1="493.9" x2="381.1" y2="502.0" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="375.6" y1="464.5" x2="401.3" y2="479.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="387.3" y1="471.3" x2="398.2" y2="477.6" stroke="#fff" stroke-width="7.5"/>
+<line x1="387.3" y1="471.3" x2="398.2" y2="477.6" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="386.3" y1="441.6" x2="414.1" y2="451.7" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="399.0" y1="446.2" x2="410.8" y2="450.5" stroke="#fff" stroke-width="7.5"/>
+<line x1="399.0" y1="446.2" x2="410.8" y2="450.5" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<line x1="392.9" y1="417.2" x2="422.0" y2="422.3" stroke="#5c6b78" stroke-width="0.6" stroke-dasharray="3 4" />
+<line x1="406.2" y1="419.5" x2="418.6" y2="421.7" stroke="#fff" stroke-width="7.5"/>
+<line x1="406.2" y1="419.5" x2="418.6" y2="421.7" stroke="#1b2733" stroke-width="9.5" opacity="0"/>
+<path d="M327.83,240.13 A170.66,170.66 0 0 0 288.00,225.63 L289.11,220.75 A175.66,175.66 0 0 1 330.11,235.68 Z" fill="#e3a23c" stroke="#1b2733" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M326.83,234.04 A175.66,175.66 0 0 0 321.83,231.70 L322.81,229.51 A178.06,178.06 0 0 1 327.88,231.88 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M319.81,230.81 A175.66,175.66 0 0 0 314.71,228.70 L315.60,226.47 A178.06,178.06 0 0 1 320.77,228.61 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M312.66,227.90 A175.66,175.66 0 0 0 307.48,226.01 L308.26,223.75 A178.06,178.06 0 0 1 313.52,225.66 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M305.39,225.31 A175.66,175.66 0 0 0 300.13,223.65 L300.81,221.35 A178.06,178.06 0 0 1 306.15,223.03 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M298.02,223.03 A175.66,175.66 0 0 0 292.69,221.61 L293.27,219.28 A178.06,178.06 0 0 1 298.67,220.73 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<line x1="308.4" y1="231.6" x2="304.9" y2="241.0" stroke="#1b2733" stroke-width="6.75" opacity=".55"/>
+<path d="M271.20,222.67 A170.66,170.66 0 0 0 228.80,222.67 L228.18,217.70 A175.66,175.66 0 0 1 271.82,217.70 Z" fill="#e3a23c" stroke="#1b2733" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M268.17,217.29 A175.66,175.66 0 0 0 262.67,216.80 L262.84,214.41 A178.06,178.06 0 0 1 268.41,214.90 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M260.47,216.66 A175.66,175.66 0 0 0 254.96,216.41 L255.03,214.01 A178.06,178.06 0 0 1 260.62,214.26 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M252.76,216.37 A175.66,175.66 0 0 0 247.24,216.37 L247.20,213.97 A178.06,178.06 0 0 1 252.80,213.97 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M245.04,216.41 A175.66,175.66 0 0 0 239.53,216.66 L239.38,214.26 A178.06,178.06 0 0 1 244.97,214.01 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M237.33,216.80 A175.66,175.66 0 0 0 231.83,217.29 L231.59,214.90 A178.06,178.06 0 0 1 237.16,214.41 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<line x1="250.0" y1="221.3" x2="250.0" y2="231.3" stroke="#1b2733" stroke-width="6.75" opacity=".55"/>
+<path d="M212.00,225.63 A170.66,170.66 0 0 0 172.17,240.13 L169.89,235.68 A175.66,175.66 0 0 1 210.89,220.75 Z" fill="#e3a23c" stroke="#1b2733" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M207.31,221.61 A175.66,175.66 0 0 0 201.98,223.03 L201.33,220.73 A178.06,178.06 0 0 1 206.73,219.28 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M199.87,223.65 A175.66,175.66 0 0 0 194.61,225.31 L193.85,223.03 A178.06,178.06 0 0 1 199.19,221.35 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M192.52,226.01 A175.66,175.66 0 0 0 187.34,227.90 L186.48,225.66 A178.06,178.06 0 0 1 191.74,223.75 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M185.29,228.70 A175.66,175.66 0 0 0 180.19,230.81 L179.23,228.61 A178.06,178.06 0 0 1 184.40,226.47 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M178.17,231.70 A175.66,175.66 0 0 0 173.17,234.04 L172.12,231.88 A178.06,178.06 0 0 1 177.19,229.51 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<line x1="191.6" y1="231.6" x2="195.1" y2="241.0" stroke="#1b2733" stroke-width="6.75" opacity=".55"/>
+<line x1="61.3" y1="392.0" x2="438.7" y2="392.0" stroke="#5c6b78" stroke-width="0.8" stroke-dasharray="12 3 2 3" />
+<line x1="250.0" y1="191.3" x2="250.0" y2="580.7" stroke="#5c6b78" stroke-width="0.8" stroke-dasharray="12 3 2 3" />
+<line x1="120.0" y1="570.7" x2="380.0" y2="570.7" stroke="#4a9bc4" stroke-width="3" />
+<text x="125.0" y="590.7" font-size="13" fill="#2b7fa8" text-anchor="start" font-weight="400" >bolsa, en la línea de contacto</text>
+<path d="M163.3,452.7 A105.8,105.8 0 0 0 240.8,497.4" fill="none" stroke="#5c6b78" stroke-width="1.4" marker-end="url(#ar)" opacity=".9"/>
+<text x="152.2" y="501.8" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="400" >giro</text>
+<text x="250.0" y="398.0" font-size="16" fill="#1b2733" text-anchor="middle" font-weight="600" >Ø273,1</text>
+<text x="250.0" y="418.0" font-size="13.5" fill="#5c6b78" text-anchor="middle" font-weight="400" >pared 9,27</text>
+<line x1="280.0" y1="219.9" x2="434.7" y2="259.9" stroke="#1b2733" stroke-width="1" />
+<text x="438.7" y="257.9" font-size="15" fill="#1b2733" text-anchor="start" font-weight="600" >3 placas ANLA tamaño M</text>
+<text x="438.7" y="275.9" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="400" >a 20° entre centros</text>
+<path d="M250.0,187.3 A204.7,204.7 0 0 0 214.5,190.5" fill="none" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="208.7" y="176.6" font-size="14" fill="#0b6fa4" text-anchor="end" font-weight="600" >10° = 23,83 mm</text>
+<line x1="250.0" y1="392.0" x2="102.2" y2="306.7" stroke="#0b6fa4" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="168.7" y="345.1" font-size="14" fill="#0b6fa4" text-anchor="end" font-weight="600" dy="-6">R 136,53</text>
+<text x="500.0" y="474.0" font-size="15" fill="#1b2733" text-anchor="start" font-weight="600" >36 filas de agujeros</text>
+<text x="500.0" y="494.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="400" >roscados M6 pasantes</text>
+<text x="500.0" y="512.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="400" >(un agujero en cada fila</text>
+<text x="500.0" y="530.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="400" >cada 25 mm en el eje)</text>
+<line x1="500.0" y1="462.0" x2="403.6" y2="434.0" stroke="#1b2733" stroke-width="1" />
+<rect x="670" y="104" width="700" height="300" rx="8" fill="#fff" stroke="#c9d2da"/>
+<text x="686.0" y="131.0" font-size="16" fill="#1b2733" text-anchor="start" font-weight="700" letter-spacing=".04em">B · POR QUÉ LA PLACA VA CURVA (DETALLE, ESCALA 7:1)</text>
+<path d="M1011.12,332.68 A890.79,890.79 0 0 0 698.88,332.68 L687.51,268.79 A955.68,955.68 0 0 1 1022.49,268.79 Z" fill="#b7c2cc" stroke="#1b2733" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M1011.12,332.68 A890.79,890.79 0 0 0 698.88,332.68 L687.51,268.79 A955.68,955.68 0 0 1 1022.49,268.79 Z" fill="url(#hs)" stroke="none" stroke-width="0" stroke-linejoin="round"/>
+<rect x="736.0" y="226.0" width="238.0" height="28.0" fill="#e3a23c" stroke="#1b2733" stroke-width="1.2"/>
+<path d="M736.0,254.0 L736.0,261.4 A955.7,955.7 0 0 1 762.0,258.5 L762.0,254.0 Z" fill="url(#hz)" stroke="none"/>
+<path d="M974.0,254.0 L974.0,261.4 A955.7,955.7 0 0 0 948.0,258.5 L948.0,254.0 Z" fill="url(#hz)" stroke="none"/>
+<line x1="982.0" y1="252.0" x2="982.0" y2="263.4" stroke="#c0392b" stroke-width="1.4" marker-start="url(#arw)" marker-end="url(#arw)"/>
+<text x="984.0" y="218.0" font-size="14" fill="#c0392b" text-anchor="end" font-weight="700" >luz 1,06 mm</text>
+<text x="855.0" y="366.0" font-size="15" fill="#1b2733" text-anchor="middle" font-weight="700" >Placa plana</text>
+<text x="855.0" y="385.0" font-size="13" fill="#c0392b" text-anchor="middle" font-weight="600" >solo toca en el centro, queda luz en los bordes</text>
+<line x1="855.0" y1="252.0" x2="855.0" y2="252.0" stroke="#1b2733" stroke-width="0" />
+<rect x="834.0" y="253.0" width="42.0" height="56.0" fill="#6b7783" stroke="#1b2733" stroke-width="1"/>
+<path d="M1341.12,332.68 A890.79,890.79 0 0 0 1028.88,332.68 L1017.51,268.79 A955.68,955.68 0 0 1 1352.49,268.79 Z" fill="#b7c2cc" stroke="#1b2733" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M1341.12,332.68 A890.79,890.79 0 0 0 1028.88,332.68 L1017.51,268.79 A955.68,955.68 0 0 1 1352.49,268.79 Z" fill="url(#hs)" stroke="none" stroke-width="0" stroke-linejoin="round"/>
+<path d="M1303.69,261.40 A955.68,955.68 0 0 0 1066.31,261.40 L1062.83,233.62 A983.68,983.68 0 0 1 1307.17,233.62 Z" fill="#e3a23c" stroke="#1b2733" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M1278.52,230.46 A983.68,983.68 0 0 0 1264.17,229.19 L1264.85,220.82 A992.08,992.08 0 0 1 1279.32,222.09 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M1235.41,227.29 A983.68,983.68 0 0 0 1221.02,226.66 L1221.32,218.27 A992.08,992.08 0 0 1 1235.84,218.90 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M1192.21,226.03 A983.68,983.68 0 0 0 1177.79,226.03 L1177.73,217.63 A992.08,992.08 0 0 1 1192.27,217.63 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M1148.98,226.66 A983.68,983.68 0 0 0 1134.59,227.29 L1134.16,218.90 A992.08,992.08 0 0 1 1148.68,218.27 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M1105.83,229.19 A983.68,983.68 0 0 0 1091.48,230.46 L1090.68,222.09 A992.08,992.08 0 0 1 1105.15,220.82 Z" fill="#8a5a10" stroke="#8a5a10" stroke-width="0.8" stroke-linejoin="round"/>
+<text x="1185.0" y="366.0" font-size="15" fill="#1b2733" text-anchor="middle" font-weight="700" >Placa rolada a R 136,53</text>
+<text x="1185.0" y="385.0" font-size="13" fill="#1c7a4a" text-anchor="middle" font-weight="600" >apoya en todo el ancho, presión pareja</text>
+<line x1="1185.0" y1="252.0" x2="1185.0" y2="252.0" stroke="#1b2733" stroke-width="0" />
+<rect x="1164.0" y="253.0" width="42.0" height="56.0" fill="#6b7783" stroke="#1b2733" stroke-width="1"/>
+<line x1="1066.0" y1="166.0" x2="1304.0" y2="166.0" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="1185.0" y="159.0" font-size="14" fill="#0b6fa4" text-anchor="middle" font-weight="600" >34 mm de arco (14,3°)</text>
+<text x="1314.0" y="244.0" font-size="13.5" fill="#0b6fa4" text-anchor="start" font-weight="600" >4,0 mm</text>
+<text x="1314.0" y="217.8" font-size="13.5" fill="#8a5a10" text-anchor="start" font-weight="600" >relieve 1,2</text>
+<text x="1185.0" y="340.9" font-size="13" fill="#5c6b78" text-anchor="middle" font-weight="400" >espárrago M6 roscado en la pared</text>
+<rect x="670" y="420" width="700" height="438" rx="8" fill="#fff" stroke="#c9d2da"/>
+<text x="686.0" y="447.0" font-size="16" fill="#1b2733" text-anchor="start" font-weight="700" letter-spacing=".04em">C · VISTA EN PLANTA: PLACA SOBRE LA MALLA DE AGUJEROS</text>
+<circle cx="790.0" cy="570.0" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="790.0" cy="570.0" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="870.0" cy="570.0" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="870.0" cy="570.0" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="950.0" cy="570.0" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="950.0" cy="570.0" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1030.0" cy="570.0" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1030.0" cy="570.0" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1110.0" cy="570.0" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1110.0" cy="570.0" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1190.0" cy="570.0" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1190.0" cy="570.0" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1270.0" cy="570.0" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1270.0" cy="570.0" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="790.0" cy="646.2" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="790.0" cy="646.2" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="870.0" cy="646.2" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="870.0" cy="646.2" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="950.0" cy="646.2" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="950.0" cy="646.2" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1030.0" cy="646.2" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1030.0" cy="646.2" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1110.0" cy="646.2" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1110.0" cy="646.2" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1190.0" cy="646.2" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1190.0" cy="646.2" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1270.0" cy="646.2" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1270.0" cy="646.2" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="790.0" cy="722.5" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="790.0" cy="722.5" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="870.0" cy="722.5" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="870.0" cy="722.5" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="950.0" cy="722.5" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="950.0" cy="722.5" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1030.0" cy="722.5" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1030.0" cy="722.5" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1110.0" cy="722.5" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1110.0" cy="722.5" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1190.0" cy="722.5" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1190.0" cy="722.5" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<circle cx="1270.0" cy="722.5" r="9.6" fill="#fff" stroke="#5c6b78" stroke-width="1.1"/>
+<circle cx="1270.0" cy="722.5" r="11.7" fill="none" stroke="#5c6b78" stroke-width=".7" stroke-dasharray="2 2"/>
+<rect x="886.0" y="515.6" width="288.0" height="108.8" rx="5" fill="#e3a23c" stroke="#1b2733" stroke-width="1.3"/>
+<text x="1030.0" y="593.0" text-anchor="middle" font-size="88.9" font-weight="800" fill="#8a5a10" textLength="199.0" lengthAdjust="spacingAndGlyphs" font-family="Arial Narrow, Arial, sans-serif">ANLA</text>
+<circle cx="950.0" cy="570.0" r="9.6" fill="#fff" fill-opacity=".55" stroke="#1b2733" stroke-width="1.2" stroke-dasharray="3 2"/>
+<line x1="937.4" y1="570.0" x2="962.6" y2="570.0" stroke="#1b2733" stroke-width="0.8" />
+<line x1="950.0" y1="557.4" x2="950.0" y2="582.6" stroke="#1b2733" stroke-width="0.8" />
+<circle cx="1110.0" cy="570.0" r="9.6" fill="#fff" fill-opacity=".55" stroke="#1b2733" stroke-width="1.2" stroke-dasharray="3 2"/>
+<line x1="1097.4" y1="570.0" x2="1122.6" y2="570.0" stroke="#1b2733" stroke-width="0.8" />
+<line x1="1110.0" y1="557.4" x2="1110.0" y2="582.6" stroke="#1b2733" stroke-width="0.8" />
+<rect x="966.0" y="668.1" width="288.0" height="108.8" rx="5" fill="#e3a23c" stroke="#1b2733" stroke-width="1.3" opacity=".28"/>
+<line x1="886.0" y1="499.6" x2="1174.0" y2="499.6" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="1030.0" y="492.6" font-size="15" fill="#0b6fa4" text-anchor="middle" font-weight="600" >placa 90</text>
+<line x1="950.0" y1="469.6" x2="1110.0" y2="469.6" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="1030.0" y="462.6" font-size="15" fill="#0b6fa4" text-anchor="middle" font-weight="600" >2 tornillos M6 a 50</text>
+<line x1="908.4" y1="515.6" x2="908.4" y2="624.4" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="913.4" y="575.0" font-size="15" fill="#0b6fa4" text-anchor="start" font-weight="600" >34</text>
+<line x1="790.0" y1="544.0" x2="870.0" y2="544.0" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="830.0" y="537.0" font-size="15" fill="#0b6fa4" text-anchor="middle" font-weight="600" >25</text>
+<line x1="1304.0" y1="570.0" x2="1304.0" y2="646.2" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="1312.0" y="612.1" font-size="15" fill="#0b6fa4" text-anchor="start" font-weight="600" >23,83</text>
+<text x="686.0" y="818.0" font-size="13.5" fill="#1b2733" text-anchor="start" font-weight="400" >Dos placas contiguas pedirían 10,2 mm más de lo que hay entre filas, así que van a 2 filas (20°)</text>
+<text x="686.0" y="837.0" font-size="13.5" fill="#1b2733" text-anchor="start" font-weight="400" >y la luz entre ellas es 13,7 mm. Si se desfasan en el eje pueden ir en filas contiguas.</text>
+<line x1="704.0" y1="540.0" x2="704.0" y2="720.0" stroke="#5c6b78" stroke-width="1.6" marker-end="url(#ar)"/>
+<text x="712.0" y="540.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="400" transform="rotate(90 712 540)">avance de la bolsa</text>
+<rect x="30" y="612" width="610" height="246" rx="8" fill="#fff" stroke="#c9d2da"/>
+<text x="46.0" y="639.0" font-size="16" fill="#1b2733" text-anchor="start" font-weight="700" letter-spacing=".04em">D · CORTE LONGITUDINAL POR LOS DOS TORNILLOS</text>
+<rect x="54" y="710.0" width="562" height="38.9" fill="#b7c2cc" stroke="#1b2733" stroke-width="1.2"/>
+<rect x="54" y="710.0" width="562" height="38.9" fill="url(#hs)"/>
+<rect x="146.0" y="693.2" width="378.0" height="16.8" fill="#e3a23c" stroke="#1b2733" stroke-width="1.2"/>
+<rect x="175.4" y="688.2" width="42.0" height="5.0" fill="#8a5a10" stroke="#1b2733" stroke-width=".8"/>
+<rect x="267.8" y="688.2" width="42.0" height="5.0" fill="#8a5a10" stroke="#1b2733" stroke-width=".8"/>
+<rect x="360.2" y="688.2" width="42.0" height="5.0" fill="#8a5a10" stroke="#1b2733" stroke-width=".8"/>
+<rect x="452.6" y="688.2" width="42.0" height="5.0" fill="#8a5a10" stroke="#1b2733" stroke-width=".8"/>
+<rect x="215.9" y="710.0" width="28.2" height="38.9" fill="#fff" stroke="#1b2733" stroke-width="1"/>
+<rect x="217.4" y="710.0" width="25.2" height="33.6" fill="#6b7783" stroke="#1b2733" stroke-width="1"/>
+<line x1="217.4" y1="710.0" x2="242.6" y2="713.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="217.4" y1="715.0" x2="242.6" y2="718.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="217.4" y1="720.0" x2="242.6" y2="723.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="217.4" y1="725.0" x2="242.6" y2="728.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="217.4" y1="730.0" x2="242.6" y2="733.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="217.4" y1="735.0" x2="242.6" y2="738.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="217.4" y1="740.0" x2="242.6" y2="743.0" stroke="#cfd6dd" stroke-width="0.9" />
+<rect x="425.9" y="710.0" width="28.2" height="38.9" fill="#fff" stroke="#1b2733" stroke-width="1"/>
+<rect x="427.4" y="710.0" width="25.2" height="33.6" fill="#6b7783" stroke="#1b2733" stroke-width="1"/>
+<line x1="427.4" y1="710.0" x2="452.6" y2="713.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="427.4" y1="715.0" x2="452.6" y2="718.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="427.4" y1="720.0" x2="452.6" y2="723.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="427.4" y1="725.0" x2="452.6" y2="728.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="427.4" y1="730.0" x2="452.6" y2="733.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="427.4" y1="735.0" x2="452.6" y2="738.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="427.4" y1="740.0" x2="452.6" y2="743.0" stroke="#cfd6dd" stroke-width="0.9" />
+<line x1="550.0" y1="693.2" x2="550.0" y2="710.0" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="558.0" y="706.6" font-size="15" fill="#0b6fa4" text-anchor="start" font-weight="600" >4,0 placa</text>
+<line x1="550.0" y1="710.0" x2="550.0" y2="748.9" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="558.0" y="734.5" font-size="15" fill="#0b6fa4" text-anchor="start" font-weight="600" >9,27 pared</text>
+<text x="138.0" y="692.2" font-size="14" fill="#8a5a10" text-anchor="end" font-weight="600" >relieve 1,2</text>
+<text x="230.0" y="778.9" font-size="14" fill="#1b2733" text-anchor="middle" font-weight="600" >espárrago M6 × 8</text>
+<text x="230.0" y="796.9" font-size="13" fill="#5c6b78" text-anchor="middle" font-weight="400" >no sobresale al interior</text>
+<line x1="146.0" y1="666.2" x2="524.0" y2="666.2" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="335.0" y="658.2" font-size="15" fill="#0b6fa4" text-anchor="middle" font-weight="600" >90</text>
+<line x1="230.0" y1="814.9" x2="440.0" y2="814.9" stroke="#0b6fa4" stroke-width="1.3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+<text x="335.0" y="832.9" font-size="15" fill="#0b6fa4" text-anchor="middle" font-weight="600" >50</text>
+<text x="46.0" y="848.0" font-size="13" fill="#5c6b78" text-anchor="start" font-weight="400" >Los espárragos de la placa se enroscan en agujeros pasantes de la pared.</text>
+<rect x="30" y="872" width="1340" height="130" rx="8" fill="#fff" stroke="#c9d2da"/>
+<text x="46.0" y="899.0" font-size="16" fill="#1b2733" text-anchor="start" font-weight="700" letter-spacing=".04em">FAMILIA DE PLACAS ANLA (misma curvatura R 136,53)</text>
+<text x="50.0" y="926.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="700" >Talla</text>
+<text x="150.0" y="926.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="700" >Alto de letra</text>
+<text x="320.0" y="926.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="700" >Placa (largo × arco)</text>
+<text x="560.0" y="926.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="700" >Tornillos M6 a</text>
+<text x="740.0" y="926.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="700" >Flecha de la curva</text>
+<text x="950.0" y="926.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="700" >Filas que cubre</text>
+<text x="1140.0" y="926.0" font-size="13.5" fill="#5c6b78" text-anchor="start" font-weight="700" >Paso mínimo entre placas</text>
+<text x="50.0" y="950.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="600" >S</text>
+<text x="150.0" y="950.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >12 mm</text>
+<text x="320.0" y="950.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >56 × 22 mm</text>
+<text x="560.0" y="950.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >25 mm</text>
+<text x="740.0" y="950.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >0,44 mm (9,2°)</text>
+<text x="950.0" y="950.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >hasta 1</text>
+<text x="1140.0" y="950.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >10° (23,8 mm, luz 1,8 mm)</text>
+<text x="50.0" y="971.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="600" >M</text>
+<text x="150.0" y="971.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >20 mm</text>
+<text x="320.0" y="971.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >90 × 34 mm</text>
+<text x="560.0" y="971.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >50 mm</text>
+<text x="740.0" y="971.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >1,06 mm (14,3°)</text>
+<text x="950.0" y="971.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >hasta 2</text>
+<text x="1140.0" y="971.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >20° (47,7 mm, luz 13,7 mm)</text>
+<text x="50.0" y="992.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="600" >L</text>
+<text x="150.0" y="992.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >32 mm</text>
+<text x="320.0" y="992.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >140 × 48 mm</text>
+<text x="560.0" y="992.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >100 mm</text>
+<text x="740.0" y="992.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >2,10 mm (20,1°)</text>
+<text x="950.0" y="992.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >hasta 3</text>
+<text x="1140.0" y="992.0" font-size="14.5" fill="#1b2733" text-anchor="start" font-weight="400" >30° (71,5 mm, luz 23,5 mm)</text>
+</svg></template>
+<script>
+/* ═════════ Motor de cálculo de la gofradora (sin dependencias) ═════════ */
+(function (root) {
+'use strict';
+
+const TUBE = { name: 'NPS 10 Sch 40', OD: 273.05, t: 9.27, kgm: 60.31 };
+TUBE.ID = TUBE.OD - 2 * TUBE.t;
+TUBE.R = TUBE.OD / 2;
+TUBE.C = Math.PI * TUBE.OD;
+const ROWS = 36, ROW_DEG = 10, AX_PITCH = 25, FACE = 800, COLS = FACE / AX_PITCH;
+const ROW_ARC = TUBE.C / ROWS;
+const PLATE_T = 4.0, RELIEF = 1.2, STUD_D = 6, STUD_L = 8, TAP_DRILL = 5.0;
+const R_RELIEF = TUBE.R + PLATE_T + RELIEF;
+const FILM_REV = 2 * Math.PI * R_RELIEF;          // película que pasa por vuelta
+const MARK_ARC = FILM_REV / ROWS;                 // paso de una fila medido sobre la película
+const GAP_REG = 40;                               // separación mínima entre bolsas con registro
+const PU_T = 6.0, PU_SHORE = '85 A', PU_DELTA = 0.8;
+const E = 200000, RHO = 7.85e-6;
+
+const PRESETS = { S: 12, M: 20, L: 32 };
+const H_MIN = 10, H_MAX = 40;
+const MARG = [[10, 4.5, 4.9], [12, 5, 5.4], [20, 7, 7.4], [32, 8, 9.8], [40, 8.7, 11.4]];
+function margins(h) {
+  h = Math.max(H_MIN, Math.min(H_MAX, h));
+  for (let i = 0; i < MARG.length - 1; i++) {
+    const [h0, a0, b0] = MARG[i], [h1, a1, b1] = MARG[i + 1];
+    if (h <= h1) { const t = (h - h0) / (h1 - h0); return { mArc: a0 + t * (a1 - a0), mAx: b0 + t * (b1 - b0) }; }
+  }
+  return { mArc: 8.7, mAx: 11.4 };
+}
+const sizeLabel = h => { for (const [k, v] of Object.entries(PRESETS)) if (v === h) return k; return h + ''; };
+
+const BAGS = [
+  { id: 'p', name: 'Pequeña', w: 300, l: 400 },
+  { id: 'm', name: 'Mediana', w: 400, l: 500 },
+  { id: 'g', name: 'Grande', w: 450, l: 600 },
+  { id: 'x', name: 'Punto de pago', w: 500, l: 700 },
+  { id: 'j', name: 'Jumbo', w: 600, l: 800 },
+  { id: 'jj', name: 'Extra jumbo', w: 700, l: 900 },
+];
+/* altura estándar del centro de la marca, medida desde el fondo: centro del cuerpo de la bolsa */
+const hStd = L => Math.round((SEAL + (1 - 0.22) * L) / 2 / 5) * 5;
+/* Registro: la bolsa i recibe la placa de la fila (i·k mod 36). Con g = mcd(k, 36) hacen falta 36/g filas con placa.
+   Se busca k entre el mínimo y +15 % (pérdida de producción) que deje g ≥ filas que ocupa la placa × logos en vertical
+   y use el menor número de placas. */
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+function regStep(L, minRows = 2, vert = 1) {
+  const kmin = Math.max(1, Math.ceil((L + GAP_REG) / MARK_ARC));
+  let best = null;
+  for (let k = kmin; k <= Math.max(kmin, Math.floor(kmin * 1.15)); k++) {
+    const g = gcd(k, 36);
+    if (g < minRows * vert && k < 36) continue;
+    const plates = 36 / gcd(k, 36);
+    if (!best || plates < best.plates) best = { k, g, plates };
+  }
+  if (!best) { const k = Math.ceil(kmin / 36) * 36; best = { k, g: 36, plates: 1 }; }
+  best.pitch = best.k * MARK_ARC; best.gap = best.pitch - L; best.perRev = 36 / best.k;
+  return best;
+}
+const HANDLE_FRAC = 0.22, SEAL = 10;
+
+/* Tipografía de trazo, rejilla 4×6 */
+const O_ = [[1,0],[0,1],[0,5],[1,6],[3,6],[4,5],[4,1],[3,0],[1,0]];
+const P_ = [[0,0],[0,6],[3,6],[4,5],[4,4],[3,3],[0,3]];
+const FONT = {
+  A: [[[0,0],[0,4],[2,6],[4,4],[4,0]], [[0,3],[4,3]]],
+  B: [[[0,0],[0,6],[3,6],[4,5],[4,4],[3,3],[0,3]], [[3,3],[4,2],[4,1],[3,0],[0,0]]],
+  C: [[[4,5],[3,6],[1,6],[0,5],[0,1],[1,0],[3,0],[4,1]]],
+  D: [[[0,0],[0,6],[3,6],[4,5],[4,1],[3,0],[0,0]]],
+  E: [[[4,6],[0,6],[0,0],[4,0]], [[0,3],[3,3]]],
+  F: [[[4,6],[0,6],[0,0]], [[0,3],[3,3]]],
+  G: [[[4,5],[3,6],[1,6],[0,5],[0,1],[1,0],[3,0],[4,1],[4,3],[2,3]]],
+  H: [[[0,0],[0,6]], [[4,0],[4,6]], [[0,3],[4,3]]],
+  I: [[[1,6],[3,6]], [[2,6],[2,0]], [[1,0],[3,0]]],
+  J: [[[1,6],[4,6]], [[3,6],[3,1],[2,0],[1,0],[0,1]]],
+  K: [[[0,0],[0,6]], [[4,6],[0,2]], [[1,3],[4,0]]],
+  L: [[[0,6],[0,0],[4,0]]],
+  M: [[[0,0],[0,6],[2,3],[4,6],[4,0]]],
+  N: [[[0,0],[0,6],[4,0],[4,6]]],
+  O: [O_], P: [P_], Q: [O_, [[2,2],[4,0]]], R: [P_, [[2,3],[4,0]]],
+  S: [[[4,5],[3,6],[1,6],[0,5],[0,4],[1,3],[3,3],[4,2],[4,1],[3,0],[1,0],[0,1]]],
+  T: [[[0,6],[4,6]], [[2,6],[2,0]]],
+  U: [[[0,6],[0,1],[1,0],[3,0],[4,1],[4,6]]],
+  V: [[[0,6],[2,0],[4,6]]],
+  W: [[[0,6],[1,0],[2,3],[3,0],[4,6]]],
+  X: [[[0,6],[4,0]], [[0,0],[4,6]]],
+  Y: [[[0,6],[2,3],[4,6]], [[2,3],[2,0]]],
+  Z: [[[0,6],[4,6],[0,0],[4,0]]],
+  0: [O_, [[0,1],[4,5]]],
+  1: [[[1,5],[2,6],[2,0]], [[1,0],[3,0]]],
+  2: [[[0,5],[1,6],[3,6],[4,5],[4,4],[0,0],[4,0]]],
+  3: [[[0,5],[1,6],[3,6],[4,5],[4,4],[3,3],[1,3]], [[3,3],[4,2],[4,1],[3,0],[1,0],[0,1]]],
+  4: [[[3,0],[3,6],[0,2],[4,2]]],
+  5: [[[4,6],[0,6],[0,3],[3,3],[4,2],[4,1],[3,0],[0,0]]],
+  6: [[[3,6],[1,6],[0,5],[0,1],[1,0],[3,0],[4,1],[4,2],[3,3],[0,3]]],
+  7: [[[0,6],[4,6],[1,0]]],
+  8: [[[1,3],[0,4],[0,5],[1,6],[3,6],[4,5],[4,4],[3,3],[1,3],[0,2],[0,1],[1,0],[3,0],[4,1],[4,2],[3,3]]],
+  9: [[[4,3],[1,3],[0,4],[0,5],[1,6],[3,6],[4,5],[4,1],[3,0],[1,0]]],
+  '-': [[[0.6,3],[3.4,3]]],
+};
+const GW = 4, GSP = 1.8, STROKE = 1.15;
+function cleanText(t) { return (t || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 10) || 'ANLA'; }
+
+/* Rectángulos de trazo en mm, centrados en (0,0). X = a lo largo del eje, Y = tangencial. */
+function textStrokes(text, h) {
+  const t = cleanText(text), k = h / 6, W = t.length * GW + (t.length - 1) * GSP, sw = STROKE * k, out = [];
+  [...t].forEach((ch, i) => {
+    const x0 = -W / 2 + i * (GW + GSP);
+    for (const line of (FONT[ch] || [])) for (let j = 0; j < line.length - 1; j++) {
+      const ax = (x0 + line[j][0]) * k, ay = (line[j][1] - 3) * k, bx = (x0 + line[j + 1][0]) * k, by = (line[j + 1][1] - 3) * k;
+      const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, nx = -uy * sw / 2, ny = ux * sw / 2, e = sw / 2;
+      const a = [ax - ux * e, ay - uy * e], b = [bx + ux * e, by + uy * e];
+      out.push([[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]]);
+    }
+  });
+  return { rects: out, width: W * k + sw, height: h + sw, len: t.length, text: t };
+}
+function inQuad(q, x, y) {
+  let s = 0;
+  for (let i = 0; i < 4; i++) {
+    const [x1, y1] = q[i], [x2, y2] = q[(i + 1) % 4];
+    const c = (x2 - x1) * (y - y1) - (y2 - y1) * (x - x1);
+    if (c === 0) continue;
+    const sg = c > 0 ? 1 : -1;
+    if (s === 0) s = sg; else if (sg !== s) return false;
+  }
+  return true;
+}
+/* Área de contacto: total y máxima dentro de una franja tangencial de ancho b (la huella del nip) */
+function contactAreas(strokes, b) {
+  let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+  for (const q of strokes.rects) for (const [x, y] of q) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+  const d = (maxY - minY) / 160, nx = Math.ceil((maxX - minX) / d), ny = Math.ceil((maxY - minY) / d);
+  const rows = new Float64Array(ny);
+  for (let j = 0; j < ny; j++) {
+    const y = minY + (j + 0.5) * d; let c = 0;
+    for (let i = 0; i < nx; i++) {
+      const x = minX + (i + 0.5) * d;
+      for (const q of strokes.rects) if (inQuad(q, x, y)) { c++; break; }
+    }
+    rows[j] = c * d * d;
+  }
+  let total = 0; for (const r of rows) total += r;
+  const nb = Math.max(1, Math.round(b / d)); let best = 0, acc = 0;
+  for (let j = 0; j < ny; j++) { acc += rows[j]; if (j >= nb) acc -= rows[j - nb]; best = Math.max(best, acc); }
+  return { total, band: best };
+}
+function plateGeom(h, text) {
+  h = Math.max(H_MIN, Math.min(H_MAX, Math.round(+h || 20)));
+  const s = margins(h), st = textStrokes(text, h);
+  const L = Math.ceil(st.width + 2 * s.mAx), W = Math.round(h + 2 * s.mArc);
+  const size = sizeLabel(h);
+  const studSp = AX_PITCH * Math.max(1, Math.floor((L - 20) / AX_PITCH));
+  const span = Math.round(studSp / AX_PITCH);
+  const arcDeg = W / TUBE.R * 180 / Math.PI;
+  const sag = TUBE.R * (1 - Math.cos(W / TUBE.R / 2));
+  const minRows = Math.ceil((W + 1) / ROW_ARC);
+  return { size, h, L, W, studSp, span, arcDeg, sag, minRows, strokes: st };
+}
+
+/* ── Materiales ── propiedades mínimas de norma (MPa) y precio de referencia (COP/kg) */
+const ROLLER_MATS = [
+  { id: 'a53', name: 'ASTM A53 Gr. B', form: 'Tubería con costura ERW, Sch 40', std: 'ASTM A53/A53M', Sy: 240, Sut: 415, price: 6500, priceSrc: 'est', mach: 4, weld: 5, corr: 2, avail: 5,
+    note: 'Tubería de conducción de uso general; 0,30 %C máx. Costura longitudinal soldada por resistencia.' },
+  { id: 'a106', name: 'ASTM A106 Gr. B', form: 'Tubería sin costura, Sch 40', std: 'ASTM A106/A106M', Sy: 240, Sut: 415, price: 9800, priceSrc: 'gyj6', mach: 4, weld: 5, corr: 2, avail: 4,
+    note: 'Sin costura, para servicio a temperatura. Mejor homogeneidad de pared; misma química base que A53 B.' },
+  { id: 'x42', name: 'API 5L X42 PSL1', form: 'Tubería de línea, Sch 40', std: 'API Spec 5L', Sy: 290, Sut: 415, price: 7000, priceSrc: 'est', mach: 4, weld: 4, corr: 2, avail: 4,
+    note: 'Tubería petrolera de amplio inventario en Colombia; requiere verificar trazabilidad y estado si es de excedente.' },
+  { id: 'a519', name: 'ASTM A519 1045', form: 'Tubo mecánico laminado en caliente', std: 'ASTM A519 / SAE J403', Sy: 310, Sut: 565, price: 13000, priceSrc: 'est', mach: 3, weld: 2, corr: 2, avail: 2,
+    note: 'Acero de medio carbono; mayor resistencia y dureza, pero exige precalentamiento para soldar los discos de cierre.' },
+  { id: 'tp304', name: 'ASTM A312 TP304', form: 'Tubería inoxidable, Sch 40S', std: 'ASTM A312/A312M', Sy: 205, Sut: 515, price: 32000, priceSrc: 'est', mach: 1, weld: 3, corr: 5, avail: 2,
+    note: 'Austenítico; se endurece por deformación al taladrar y roscar, lo que encarece la malla de 1.152 agujeros.' },
+];
+const STRUCT_MATS = [
+  { id: 'a36', name: 'ASTM A36', form: 'Lámina y placa HR, ángulos', std: 'ASTM A36/A36M · NTC 1920', Sy: 250, Sut: 400, price: 5830, priceSrc: 'gyj', mach: 4, weld: 5, corr: 2, avail: 5,
+    note: 'Acero estructural de referencia; se consigue en placa, platina y ángulo en distribuidores y en Homecenter.' },
+  { id: 'a572', name: 'ASTM A572 Gr. 50', form: 'Placa HR', std: 'ASTM A572/A572M · NTC 1985', Sy: 345, Sut: 450, price: 6300, priceSrc: 'est', mach: 4, weld: 4, corr: 2, avail: 3,
+    note: 'Alta resistencia baja aleación; su ventaja de fluencia no se aprovecha con las cargas de esta máquina.' },
+  { id: 'a500', name: 'ASTM A500 Gr. C', form: 'Tubo estructural cuadrado y rectangular', std: 'ASTM A500/A500M', Sy: 345, Sut: 425, price: 4800, priceSrc: 'cc', mach: 2, weld: 4, corr: 2, avail: 5,
+    note: 'Conformado en frío; ideal para la base, poco apto para alojar asientos de rodamiento o ranuras mecanizadas.' },
+  { id: 'sae1020', name: 'SAE 1020 HR', form: 'Platina y barra', std: 'SAE J403', Sy: 210, Sut: 380, price: 6800, priceSrc: 'est', mach: 4, weld: 5, corr: 2, avail: 4,
+    note: 'Bajo carbono; buena maquinabilidad para bloques de rodamiento y guías.' },
+  { id: 'ss304', name: 'AISI 304', form: 'Lámina laminada en frío 2B', std: 'ASTM A240/A240M', Sy: 205, Sut: 515, price: 14430, priceSrc: 'gyj', mach: 2, weld: 3, corr: 5, avail: 3,
+    note: 'Inoxidable; no requiere pintura, pero triplica el costo por kilogramo y se distorsiona al soldar placas gruesas.' },
+];
+const SHAFT_MATS = [
+  { id: 's1020', name: 'SAE 1020 HR', Sy: 210, Sut: 380 },
+  { id: 's1045', name: 'SAE 1045 HR', Sy: 310, Sut: 565 },
+  { id: 's4140', name: 'AISI 4140 recocido', Sy: 417, Sut: 655 },
+];
+const PRICE_SOURCES = {
+  gyj: 'Lista de precios G&J Ferretería, Bogotá (consultada oct. 2026)',
+  cc: 'Comando Construcciones, tabla de precios de acero en Bogotá, 2026',
+  gyj6: 'G&J Ferretería, Bogotá: tubería A106 6" SCH80 a $2.502.528 por tramo; se supone tramo de 6 m y se usa como referencia de tubería sin costura',
+  est: 'Estimación del proyecto; requiere cotización',
+};
+
+/* ── Fatiga: factores de Marin (Shigley, 10.ª ed., cap. 6) ── */
+const kaMachined = Sut => 4.51 * Math.pow(Sut, -0.265);
+const kbBend = d => d <= 51 ? 1.24 * Math.pow(Math.max(d, 2.79), -0.107) : 1.51 * Math.pow(Math.min(d, 254), -0.157);
+function neuberSqrtA(SutMPa) { const S = SutMPa / 6.89476; return 0.246 - 3.08e-3 * S + 1.51e-5 * S * S - 2.67e-8 * S * S * S; }
+function qNotch(SutMPa, r_mm) { const ra = Math.sqrt(r_mm / 25.4); return 1 / (1 + neuberSqrtA(SutMPa) / ra); }
+
+const DEFAULTS = {
+  bagId: 'x', bagW: 500, bagL: 700, filmUm: 35, filmSy: 22,
+  pMark: 8, nipB: 6, nSim: 2, Kd: 1.25, speed: 60,
+  span: 940, overhang: 60, crr: 0.02, muSlip: 0.4, eta: 0.85,
+  nReq: 2.0, ke: 0.814, deflMax: 0.10, Kt: 2.6,
+  plateH: 20, text: 'ANLA', vert: 1, lanes: 1,
+  sidePlateT: 12, sidePlateW: 300, slotW: 110, yokeSpan: 200, yokeH: 60, structMass: 95,
+  shaftKf: 1.7, shaftKfs: 1.5, shaftN: 2.0, bearingC: 29100, life: 20000,
+};
+
+function sectionTube() {
+  const { OD, ID, t } = TUBE;
+  const I = Math.PI / 64 * (Math.pow(OD, 4) - Math.pow(ID, 4));
+  const S = I / (OD / 2);
+  const Dm = OD - t;
+  const netFactor = 1 - ROWS * TAP_DRILL / (Math.PI * Dm);
+  return { I, S, Snet: S * netFactor, netFactor, A: Math.PI / 4 * (OD * OD - ID * ID), Dm };
+}
+
+function compute(inp) {
+  const p = Object.assign({}, DEFAULTS, inp || {});
+  const r = { p };
+  r.tube = TUBE; r.sec = sectionTube();
+  r.plate = plateGeom(p.plateH, p.text);
+  const ca = contactAreas(r.plate.strokes, p.nipB);
+  r.Aletters = ca.total; r.Aband = ca.band;
+  r.Fplate = p.pMark * r.Aband;                       // N
+  r.Fnip = p.Kd * p.nSim * r.Fplate;                  // N, diseño
+  // masas
+  r.tubeLen = FACE + 40;
+  r.mTube = TUBE.kgm * r.tubeLen / 1000;
+  r.mDisc = Math.PI / 4 * TUBE.ID * TUBE.ID * 25 * RHO;
+  r.mRoll = r.mTube + 2 * r.mDisc;
+  r.W = r.mRoll * 9.81;
+  r.w = r.W / r.tubeLen;                               // N/mm
+  // flexión del cuerpo
+  const L = p.span;
+  r.M = r.Fnip * L / 4 + r.W * L / 8;
+  r.R = r.Fnip / 2 + r.W / 2;
+  r.sigma = r.M / r.sec.Snet;
+  r.defl = r.Fnip * L ** 3 / (48 * E * r.sec.I) + 5 * r.w * L ** 4 / (384 * E * r.sec.I);
+  // cinemática y potencia
+  r.v = p.speed / 60;                                  // m/s
+  r.omega = r.v / (R_RELIEF / 1000);                   // rad/s
+  r.rpm = r.omega * 60 / (2 * Math.PI);
+  r.T = 2 * p.crr * r.Fnip * R_RELIEF;                 // N·mm (rodadura del PU, ambos rodillos)
+  r.P = r.T / 1000 * r.omega / p.eta;                  // W
+  // espárragos y rosca
+  r.Ft = p.muSlip * p.Kd * r.Fplate;
+  const As = 20.1, SyStud = 450;
+  r.tauStud = r.Ft / (2 * As);
+  r.nStud = 0.577 * SyStud / r.tauStud;
+  r.Fbolt = As * SyStud;
+  // muñón
+  r.Ma = r.R * p.overhang;
+  r.shaft = SHAFT_MATS.map(m => {
+    let d = 40;
+    for (let it = 0; it < 30; it++) {
+      const Se = 0.5 * m.Sut * kaMachined(m.Sut) * kbBend(d) * p.ke;
+      const term = Math.sqrt(4 * (p.shaftKf * r.Ma / Se) ** 2 + 3 * (p.shaftKfs * r.T / m.Sy) ** 2);
+      d = Math.cbrt(16 * p.shaftN / Math.PI * term);
+    }
+    return Object.assign({}, m, { d });
+  });
+  // rodamientos
+  r.L10h = Math.pow(p.bearingC / r.R, 3) * 1e6 / (r.rpm * 60);
+  // ── candidatos del rodillo
+  const nPU = p.nReq;
+  r.roller = ROLLER_MATS.map(m => {
+    const ka = kaMachined(m.Sut), kb = kbBend(TUBE.OD), Sep = 0.5 * m.Sut;
+    const Se = Sep * ka * kb * 1 * 1 * p.ke;
+    const q = qNotch(m.Sut, TAP_DRILL / 2);
+    const Kf = 1 + q * (p.Kt - 1);
+    const sa = Kf * r.sigma;
+    const nf = Se / sa, ny = m.Sy / r.sigma;
+    const LeReq = r.Fbolt / (0.577 * m.Sy * 0.75 * Math.PI * STUD_D);
+    const thread = STUD_L / LeReq;
+    const mass = r.mTube, cost = mass * m.price;
+    return Object.assign({}, m, { ka, kb, Se, q, Kf, sa, nf, ny, LeReq, thread, mass, cost });
+  });
+  // ── candidatos de estructura
+  const Aside = p.sidePlateT * (p.sidePlateW - p.slotW);
+  r.struct = STRUCT_MATS.map(m => {
+    const sTens = r.R / Aside;
+    const Myoke = r.R * p.yokeSpan / 4, Syoke = p.sidePlateT * p.yokeH ** 2 / 6;
+    const sYoke = Myoke / Syoke;
+    const ny = m.Sy / Math.max(sTens, sYoke);
+    const cost = p.structMass * m.price;
+    return Object.assign({}, m, { sTens, sYoke, ny, cost });
+  });
+  r.sTensSide = r.R / Aside; r.sYoke = (r.R * p.yokeSpan / 4) / (p.sidePlateT * p.yokeH ** 2 / 6);
+  // ── matrices de decisión
+  const scoreN = n => Math.max(0, Math.min(5, 1 + 4 * (n - p.nReq) / (3 * p.nReq - p.nReq)));
+  const scoreThread = t => t < 1 ? 0 : Math.min(5, 1 + 4 * (t - 1) / 0.8);
+  const scoreCost = (c, arr) => { const mn = Math.min(...arr), mx = Math.max(...arr); return mx === mn ? 5 : 1 + 4 * (mx - c) / (mx - mn); };
+  const RW = { fat: 15, thread: 10, mach: 15, weld: 10, corr: 5, avail: 20, cost: 25 };
+  const rc = r.roller.map(m => m.cost);
+  r.roller.forEach(m => {
+    m.scores = { fat: scoreN(m.nf), thread: scoreThread(m.thread), mach: m.mach, weld: m.weld, corr: m.corr, avail: m.avail, cost: scoreCost(m.cost, rc) };
+    m.total = Object.keys(RW).reduce((s, k) => s + RW[k] * m.scores[k], 0) / 5;
+    m.pass = m.nf >= p.nReq && m.ny >= p.nReq && m.thread >= 1;
+  });
+  const SW = { str: 10, weld: 20, mach: 10, avail: 20, cost: 30, corr: 10 };
+  const sc = r.struct.map(m => m.cost);
+  r.struct.forEach(m => {
+    m.scores = { str: scoreN(m.ny), weld: m.weld, mach: m.mach, avail: m.avail, cost: scoreCost(m.cost, sc), corr: m.corr };
+    m.total = Object.keys(SW).reduce((s, k) => s + SW[k] * m.scores[k], 0) / 5;
+    m.pass = m.ny >= p.nReq;
+  });
+  r.RW = RW; r.SW = SW;
+  r.rollerBest = r.roller.filter(m => m.pass).sort((a, b) => b.total - a.total)[0];
+  r.structBest = r.struct.filter(m => m.pass).sort((a, b) => b.total - a.total)[0];
+  // ── distribución recomendada de placas para la bolsa
+  const usable = p.bagL - SEAL - HANDLE_FRAC * p.bagL;
+  r.usable = usable;
+  r.markH = r.plate.strokes.height;
+  const maxStepRows = Math.floor((usable - r.markH) / MARK_ARC);
+  const divisors = [1, 2, 3, 4, 6, 9, 12, 18, 36].filter(n => n >= r.plate.minRows && n <= maxStepRows);
+  r.stepRows = divisors.length ? divisors[divisors.length - 1] : null;
+  r.platesPerRev = r.stepRows ? ROWS / r.stepRows : 0;
+  r.markPitch = r.stepRows ? r.stepRows * MARK_ARC : null;
+  r.reg = regStep(p.bagL, r.plate.minRows, p.vert || 1); r.hStd = hStd(p.bagL);
+  return r;
+}
+
+const API = { FILM_REV, MARK_ARC, GAP_REG, PRESETS, H_MIN, H_MAX, sizeLabel, hStd, regStep, margins, TUBE, ROWS, ROW_DEG, ROW_ARC, AX_PITCH, FACE, COLS, PLATE_T, RELIEF, STUD_D, STUD_L, TAP_DRILL, R_RELIEF, PU_T, PU_SHORE, PU_DELTA,
+  BAGS, HANDLE_FRAC, SEAL, FONT, cleanText, textStrokes, plateGeom, contactAreas, ROLLER_MATS, STRUCT_MATS, SHAFT_MATS, PRICE_SOURCES,
+  DEFAULTS, compute, sectionTube, kaMachined, kbBend, qNotch, E };
+if (typeof module !== 'undefined') module.exports = API; else root.GOF = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* ═════════ Estado compartido: simulador ↔ informe ═════════ */
+(function () {
+'use strict';
+const G = window.GOF;
+const s = Object.assign({}, G.DEFAULTS, {
+  bagId: 'x', bagW: 500, bagL: 700, text: 'ANLA', h: 20, plates: [], sel: null,
+  mode: 'reg', hMark: G.hStd(700), lanes: 1, vert: 1, nRev: 6, xOff: 0,
+  speed: 60, ts: 0.25, running: !matchMedia('(prefers-reduced-motion: reduce)').matches, tags: true,
+});
+const subs = [];
+const geoCache = new Map();
+function geom(h, text) {
+  const k = h + '|' + G.cleanText(text);
+  if (!geoCache.has(k)) {
+    const g = G.plateGeom(h, text);
+    g.areas = G.contactAreas(g.strokes, s.nipB);
+    geoCache.set(k, g);
+  }
+  return geoCache.get(k);
+}
+const xCol = c => -G.FACE / 2 + G.AX_PITCH / 2 + G.AX_PITCH * c;          // mm
+const wrapRow = r => ((r % G.ROWS) + G.ROWS) % G.ROWS;
+function plateInfo(pl) {
+  const g = geom(pl.h, s.text);
+  const xc = xCol(pl.c0) + g.span * G.AX_PITCH / 2;
+  return { g, xc, ang: pl.row * G.ROW_DEG };
+}
+function rowDist(a, b) { const d = Math.abs(a - b) % G.ROWS; return Math.min(d, G.ROWS - d); }
+function collides(a, b) {
+  const A = plateInfo(a), B = plateInfo(b);
+  return rowDist(a.row, b.row) * G.ROW_ARC < (A.g.W + B.g.W) / 2 + 1 && Math.abs(A.xc - B.xc) < (A.g.L + B.g.L) / 2 + 1;
+}
+function fits(pl) {
+  const I = plateInfo(pl);
+  return pl.c0 >= 0 && pl.c0 + I.g.span < G.COLS && Math.abs(I.xc) + I.g.L / 2 <= G.FACE / 2;
+}
+/* placa con su centro lo más cerca posible de la posición axial xmm */
+function placeAt(row, xmm, h) {
+  const g = geom(h, s.text);
+  let best = null;
+  for (let c0 = 0; c0 + g.span < G.COLS; c0++) {
+    const xc = xCol(c0) + g.span * G.AX_PITCH / 2;
+    if (Math.abs(xc) + g.L / 2 > G.FACE / 2) continue;
+    if (!best || Math.abs(xc - xmm) < Math.abs(best.xc - xmm) - 1e-6) best = { c0, xc };
+  }
+  return best ? { row: wrapRow(row), c0: best.c0, h } : null;
+}
+function check(pl, list, skip) {
+  if (!pl || !fits(pl)) return 'No cabe en la cara útil del rodillo en esa posición.';
+  for (let i = 0; i < list.length; i++) if (i !== skip && collides(pl, list[i])) {
+    return `Choca con otra placa. Esta placa ocupa ${geom(pl.h, s.text).minRows} fila${geom(pl.h, s.text).minRows > 1 ? 's' : ''}; desplázala a otra fila o a lo largo del eje.`;
+  }
+  return null;
+}
+const tryAdd = pl => check(pl, s.plates, -1);
+const usableLen = L => L - G.SEAL - G.HANDLE_FRAC * L;
+
+/* centros de carriles a lo ancho de la bolsa */
+function laneCenters(n, L) {
+  const hw = Math.min(s.bagW / 2 - 40, G.FACE / 2);
+  for (let k = n; k > 1; k--) {
+    const sp = (2 * hw - L) / (k - 1);
+    if (sp >= L + 10) return Array.from({ length: k }, (_, i) => -hw + L / 2 + i * sp);
+  }
+  return [0];
+}
+
+const regFor = () => G.regStep(s.bagL, geom(s.h, s.text).minRows, 1);
+
+/* paso para modo continuo: mayor separación (en filas) que todavía deja una marca completa por bolsa */
+function contMaxStep(g) { return Math.floor((usableLen(s.bagL) - g.strokes.height) / G.MARK_ARC); }
+/* valores posibles de logos por vuelta (por carril) */
+function revOptions() {
+  const g = geom(s.h, s.text), max = Math.max(1, Math.floor(G.ROWS / g.minRows));
+  if (s.mode === 'reg') {
+    const R = regFor(), P = G.ROWS / R.g, vmax = Math.max(1, Math.floor(R.g / g.minRows));
+    const list = []; for (let v = 1; v <= vmax; v++) list.push(P * v);
+    return { list, max, P, R, g };
+  }
+  const ms = contMaxStep(g), list = [];
+  for (let n = 1; n <= max; n++) list.push(n);
+  const nMin = ms >= 1 ? list.find(n => Math.ceil(G.ROWS / n) <= ms) : undefined;
+  return { list, max, nMin, g };
+}
+function recRev() { const o = revOptions(); return s.mode === 'reg' ? o.list[0] : (o.nMin || o.max); }
+function snapRev(n) { const o = revOptions(); return o.list.reduce((a, b) => Math.abs(b - n) < Math.abs(a - n) ? b : a, o.list[0]); }
+const uniformRows = n => [...new Set(Array.from({ length: n }, (_, i) => Math.round(i * G.ROWS / n) % G.ROWS))];
+/* desplazamiento lateral admisible para el conjunto de carriles */
+function xOffMax() {
+  const g = geom(s.h, s.text), c = laneCenters(s.lanes, g.L), ext = Math.max(...c.map(Math.abs)) + g.L / 2;
+  const lim = Math.min(s.bagW / 2 - 15, G.FACE / 2) - ext;
+  return Math.max(0, Math.floor(lim / G.AX_PITCH) * G.AX_PITCH);
+}
+function contStep(g) { const o = revOptions(); return o.nMin ? Math.ceil(G.ROWS / o.nMin) : null; }
+function autoLayout() {
+  const g = geom(s.h, s.text);
+  const off = Math.max(-xOffMax(), Math.min(xOffMax(), s.xOff || 0));
+  const centers = laneCenters(s.lanes, g.L).map(x => x + off);
+  const n = snapRev(s.nRev || recRev());
+  const out = [];
+  for (const r of uniformRows(n)) for (const x of centers) {
+    const p = placeAt(r, x, s.h);
+    if (p && !check(p, out, -1)) out.push(p);
+  }
+  const info = { n, off };
+  if (s.mode === 'cont' && !revOptions().nMin) info.err = 'La bolsa es demasiado corta para garantizar una marca con este tamaño de logo.';
+  return { plates: out, lanes: centers.length, info };
+}
+
+/* revisión del reparto para la bolsa y el modo actuales */
+function checkLayout() {
+  const out = { inBag: [], outBag: [], maxPerRow: 0, markH: 0, ok: false, mode: s.mode };
+  const hw = s.bagW / 2;
+  for (const pl of s.plates) {
+    const I = plateInfo(pl);
+    (Math.abs(I.xc) + I.g.strokes.width / 2 <= hw - 5 ? out.inBag : out.outBag).push(pl);
+  }
+  const perRow = {}; out.inBag.forEach(p => { perRow[p.row] = (perRow[p.row] || 0) + 1; });
+  out.maxPerRow = Math.max(0, ...Object.values(perRow), ...s.plates.map(() => 0));
+  { const all = {}; s.plates.forEach(p => { all[p.row] = (all[p.row] || 0) + 1; }); out.maxPerRowAll = Math.max(0, ...Object.values(all)); }
+  out.markH = Math.max(0, ...out.inBag.map(p => geom(p.h, s.text).strokes.height));
+  const rows = [...new Set(out.inBag.map(p => p.row))].sort((a, b) => a - b);
+  if (s.mode === 'cont') {
+    if (rows.length) {
+      let gap = 0;
+      for (let i = 0; i < rows.length; i++) { const a = rows[i], b = i + 1 < rows.length ? rows[i + 1] : rows[0] + G.ROWS; gap = Math.max(gap, b - a); }
+      out.maxGap = gap * G.MARK_ARC;
+      out.need = usableLen(s.bagL) - out.markH;
+      out.ok = out.maxGap <= out.need;
+    }
+  } else {
+    const R = regFor();
+    out.reg = R;
+    // filas que reciben cada bolsa: múltiplos de g; cada una necesita al menos una placa dentro del ancho
+    const needRows = []; for (let r = 0; r < G.ROWS; r += R.g) needRows.push(r);
+    out.missing = needRows.filter(r => !rows.includes(r));
+    const body0 = G.SEAL, body1 = s.bagL * (1 - G.HANDLE_FRAC);
+    out.heights = out.inBag.map(p => ({ p, hc: s.hMark + (p.row % R.g) * G.MARK_ARC, mh: geom(p.h, s.text).strokes.height }));
+    out.badHeights = out.heights.filter(o => o.hc - o.mh / 2 < body0 || o.hc + o.mh / 2 > body1);
+    out.ok = rows.length > 0 && out.missing.length === 0 && out.badHeights.length === 0;
+  }
+  return out;
+}
+
+/* selección */
+function selPlate() { return s.sel != null ? s.plates[s.sel] : null; }
+function replaceSel(np) {
+  const err = check(np, s.plates, s.sel);
+  if (err) return err;
+  const list = s.plates.slice(); list[s.sel] = np; set({ plates: list });
+  return null;
+}
+function moveSel(dRow, dCol) {
+  const pl = selPlate(); if (!pl) return 'Selecciona una placa en la malla.';
+  return replaceSel({ ...pl, row: wrapRow(pl.row + dRow), c0: pl.c0 + dCol });
+}
+function resizeSel(h) {
+  const pl = selPlate(); if (!pl) return null;
+  const I = plateInfo(pl), np = placeAt(pl.row, I.xc, h);
+  return replaceSel(np);
+}
+function dupSel(dir) {
+  const pl = selPlate(); if (!pl) return 'Selecciona una placa en la malla.';
+  const I = plateInfo(pl);
+  let cand = null;
+  if (dir === 'up') {
+    for (let d = I.g.minRows; d < G.ROWS; d++) { const c = { ...pl, row: wrapRow(pl.row + d) }; if (!check(c, s.plates, -1)) { cand = c; break; } }
+  } else {
+    for (const sg of [1, -1]) {
+      for (let dx = I.g.L + 10; dx <= G.FACE; dx += G.AX_PITCH) { const c = placeAt(pl.row, I.xc + sg * dx, pl.h); if (c && !check(c, s.plates, -1) && Math.sign(plateInfo(c).xc - I.xc) === sg) { cand = c; break; } }
+      if (cand) break;
+    }
+  }
+  if (!cand) return 'No hay espacio libre para duplicar en esa dirección.';
+  set({ plates: [...s.plates, cand], sel: s.plates.length });
+  return null;
+}
+function removeSel() {
+  if (s.sel == null) return;
+  const list = s.plates.slice(); list.splice(s.sel, 1); set({ plates: list, sel: null });
+}
+
+let calcKey = '', calcVal = null;
+function calc() {
+  let h = s.h, best = -1;
+  for (const pl of s.plates) { const a = geom(pl.h, s.text).areas.band; if (a > best) { best = a; h = pl.h; } }
+  const inp = {};
+  for (const k of Object.keys(G.DEFAULTS)) inp[k] = s[k];
+  const chk = checkLayout();
+  inp.plateH = h; inp.text = s.text; inp.vert = 1;
+  inp.nSim = Math.max(s.nSim, chk.maxPerRowAll || 0);
+  const key = JSON.stringify(inp);
+  if (key !== calcKey) { calcKey = key; calcVal = G.compute(inp); calcVal.nSimFromLayout = (chk.maxPerRowAll || 0) > s.nSim; }
+  return calcVal;
+}
+function set(patch, src) {
+  if ('nipB' in patch || 'text' in patch) geoCache.clear();
+  if (('bagL' in patch) && !('hMark' in patch)) patch.hMark = G.hStd(patch.bagL);
+  Object.assign(s, patch);
+  if (s.sel != null && s.sel >= s.plates.length) s.sel = null;
+  subs.forEach(f => f(patch, src));
+}
+window.APP = {
+  s, geom, xCol, plateInfo, collides, fits, placeAt, tryAdd, check, autoLayout, checkLayout, usableLen, calc, rowDist, wrapRow,
+  selPlate, moveSel, resizeSel, dupSel, removeSel, laneCenters, regFor, contStep, revOptions, recRev, snapRev, xOffMax, uniformRows,
+  on(f) { subs.push(f); }, set,
+};
+s.nRev = recRev();
+s.plates = autoLayout().plates;
+})();
+
+</script>
+<script>
+/* ═════════ Informe técnico IT-GOF-001 ═════════ */
+(function () {
+'use strict';
+const G = window.GOF, APP = window.APP, S = APP.s;
+const $ = id => document.getElementById(id);
+const n = (x, d = 0) => Number(x).toLocaleString('es-CO', { minimumFractionDigits: d, maximumFractionDigits: d });
+const v = (x, d, u) => `<em class="v">${n(x, d)}${u ? '&nbsp;' + u : ''}</em>`;
+const cop = x => '$' + n(Math.round(x / 1000) * 1000);
+/* MathML */
+const mi = s => `<mi>${s}</mi>`, mn = s => `<mn>${s}</mn>`, mo = s => `<mo>${s}</mo>`, mt = s => `<mtext>${s}</mtext>`;
+const sub = (b, s) => `<msub><mi>${b}</mi><mtext>${s}</mtext></msub>`;
+const sup = (b, e) => `<msup>${b}${e}</msup>`;
+const fr = (a, b) => `<mfrac><mrow>${a}</mrow><mrow>${b}</mrow></mfrac>`;
+const row = (...a) => `<mrow>${a.join('')}</mrow>`;
+const par = x => `<mrow>${mo('(')}${x}${mo(')')}</mrow>`;
+let eqNo = 0, tblNo = 0, figNo = 0;
+const eq = (m, res) => `<div class="eq"><math display="block">${m}</math><div class="no">(${++eqNo})</div>${res ? `<div class="res">${res}</div>` : ''}</div>`;
+const tbl = (cap, head, rows, foot, cls = '') => `<div class="tbl ${cls}"><table><caption><span>Tabla ${++tblNo}.</span>${cap}</caption><thead><tr>${head.map(h => `<th${h.n ? ' class="n"' : ''}>${h.t || h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody>${foot ? `<tfoot><tr><td colspan="${head.length}">${foot}</td></tr></tfoot>` : ''}</table></div>`;
+const td = (x, num) => `<td${num ? ' class="n"' : ''}>${x}</td>`;
+const okb = (ok, a = 'Cumple', b = 'No cumple') => ok ? `<span class="ok">${a}</span>` : `<span class="bad">${b}</span>`;
+
+const SECTIONS = [
+  ['s1', 'Objeto y alcance'], ['s2', 'Descripción de la unidad'], ['s3', 'Condiciones de servicio'],
+  ['s4', 'Cargas de diseño'], ['s5', 'Cuerpo del rodillo grabador'], ['s6', 'Fijación de las placas'],
+  ['s7', 'Muñones, rodamientos y transmisión'], ['s8', 'Bastidor'], ['s9', 'Selección de materiales'],
+  ['s10', 'Especificación y costo de materiales'], ['s11', 'Fabricación y control'], ['s12', 'Supuestos y validación'],
+  ['ref', 'Referencias'],
+];
+const INPUTS = [
+  ['bagW', 'Ancho máximo de bolsa', 'mm', 10, 'Bolsa extendida, sin fuelle'],
+  ['bagL', 'Alto máximo de bolsa, con asas', 'mm', 10, 'Fija la zona útil de marcado'],
+  ['filmUm', 'Espesor de película', 'µm', 1, 'Mínimo histórico 22,9 µm (0,9 mils)'],
+  ['filmSy', 'Fluencia de la película (PEAD reciclado)', 'MPa', 1, 'Supuesto; ensayo de tracción del lote'],
+  ['pMark', 'Presión de marcado sobre el relieve', 'MPa', 0.5, 'Supuesto; se valida con prueba'],
+  ['nipB', 'Ancho de huella en el nip', 'mm', 0.5, 'PU 85 A con 0,8 mm de compresión'],
+  ['nSim', 'Placas en contacto simultáneo (mínimo)', '–', 1, 'Si el reparto tiene más en una fila, se usa ese número'],
+  ['Kd', 'Factor dinámico de entrada de la placa', '–', 0.05, 'Impacto al entrar el relieve al nip'],
+  ['speed', 'Velocidad de línea', 'm/min', 5, 'Sincronizada con la bolsera'],
+  ['span', 'Luz entre rodamientos', 'mm', 10, 'Cara de 800 mm + discos + rodamientos'],
+  ['crr', 'Coeficiente de rodadura del PU', '–', 0.005, 'Pérdida por histéresis del elastómero'],
+  ['muSlip', 'Fricción PU–acero en deslizamiento', '–', 0.05, 'Caso extremo para los espárragos'],
+  ['nReq', 'Factor de seguridad mínimo', '–', 0.1, 'Criterio del proyecto'],
+  ['deflMax', 'Flecha admisible del rodillo', 'mm', 0.01, '12 % de la compresión del PU'],
+  ['Kt', 'Concentrador de la malla de agujeros', '–', 0.1, 'Peterson, fila de agujeros, d/l ≈ 0,21'],
+];
+
+function beamSVG(r) {
+  const W = 720, H = 250, x0 = 70, x1 = 650, yb = 92, L = r.p.span;
+  const Mmax = r.M / 1000;
+  const ym = 150, hm = 70;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagrama de carga y momento del rodillo">
+  <defs><marker id="bA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L10,5 L0,9z" fill="#18212a"/></marker>
+  <marker id="bB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L10,5 L0,9z" fill="#1d5f8a"/></marker></defs>
+  <rect x="${x0}" y="${yb - 9}" width="${x1 - x0}" height="18" fill="#dfe5ea" stroke="#18212a" stroke-width="1.2"/>
+  <rect x="${x0 + (x1 - x0) * 0.1}" y="${yb - 9}" width="${(x1 - x0) * 0.8}" height="18" fill="#c4ced6" stroke="none"/>
+  ${[x0, x1].map(x => `<path d="M${x},${yb + 9} l-12,20 h24 z" fill="#fff" stroke="#18212a" stroke-width="1.2"/><line x1="${x - 18}" y1="${yb + 31}" x2="${x + 18}" y2="${yb + 31}" stroke="#18212a"/>`).join('')}
+  <line x1="${(x0 + x1) / 2}" y1="${yb - 64}" x2="${(x0 + x1) / 2}" y2="${yb - 11}" stroke="#18212a" stroke-width="2" marker-end="url(#bA)"/>
+  <text x="${(x0 + x1) / 2 + 8}" y="${yb - 50}" font-size="13" font-family="IBM Plex Mono, monospace" fill="#18212a">F<tspan font-size="10" dy="3">n</tspan><tspan dy="-3"> = ${n(r.Fnip / 1000, 2)} kN</tspan></text>
+  ${[[x0, 'R'], [x1, 'R']].map(([x]) => `<line x1="${x}" y1="${yb + 74}" x2="${x}" y2="${yb + 36}" stroke="#1d5f8a" stroke-width="1.6" marker-end="url(#bB)"/>`).join('')}
+  <text x="${x0 - 8}" y="${yb + 70}" text-anchor="end" font-size="12" font-family="IBM Plex Mono, monospace" fill="#1d5f8a">R = ${n(r.R / 1000, 2)} kN</text>
+  <text x="${x1 + 8}" y="${yb + 70}" font-size="12" font-family="IBM Plex Mono, monospace" fill="#1d5f8a">R</text>
+  <text x="${(x0 + x1) / 2}" y="${yb + 4}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="#47535f">cara útil 800 mm</text>
+  <line x1="${x0}" y1="${yb - 30}" x2="${x1}" y2="${yb - 30}" stroke="#6f7b86" stroke-width="1" marker-start="url(#bA)" marker-end="url(#bA)" opacity=".6"/>
+  <text x="${x0 + 10}" y="${yb - 35}" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="#47535f">L = ${n(L)} mm</text>
+  <path d="M${x0},${ym + 60} L${(x0 + x1) / 2},${ym + 60 + hm * 0} L${x1},${ym + 60} Z" fill="none"/>
+  <line x1="${x0}" y1="${ym + 20}" x2="${x1}" y2="${ym + 20}" stroke="#9eabb6"/>
+  <path d="M${x0},${ym + 20} L${(x0 + x1) / 2},${ym + 20 + hm * 0.9} L${x1},${ym + 20} Z" fill="rgba(163,95,0,.12)" stroke="#a35f00" stroke-width="1.6"/>
+  <text x="${(x0 + x1) / 2 + 10}" y="${ym + 20 + hm * 0.9 - 4}" font-size="12.5" font-family="IBM Plex Mono, monospace" fill="#a35f00">M máx = ${n(Mmax, 0)} N·m</text>
+  <text x="${x0 - 8}" y="${ym + 24}" text-anchor="end" font-size="11.5" font-family="IBM Plex Mono, monospace" fill="#47535f">M</text>
+</svg>`;
+}
+
+function bars(list, best, key) {
+  const items = list.map(m => {
+    const w = Math.max(0, Math.min(100, m.total));
+    const brk = Object.entries(m.scores).map(([k, s]) => `${(key[k] || k).padEnd(15, ' ')} ${n(s, 1)}`).join('<br>');
+    return `<div class="bar-row${m === best ? ' win' : ''}${m.pass ? '' : ' fail'}" data-tip="${m.name}<br>${brk.replace(/"/g, '&quot;')}<br>Total            ${n(m.total, 1)}">
+      <div class="lab">${m.name}</div><div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div><div class="val">${n(m.total, 1)}</div></div>`;
+  }).join('');
+  return `<div class="bars">${items}<div class="bar-axis"><div></div><div><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span></div><div></div></div></div>`;
+}
+
+function render() {
+  const r = APP.calc(), p = r.p, chk = APP.checkLayout(), pl = r.plate;
+  eqNo = 0; tblNo = 0; figNo = 0;
+  const RB = r.rollerBest, SB = r.structBest;
+  const RBsecond = r.roller.filter(m => m !== RB && m.pass).sort((a, b) => b.total - a.total)[0];
+  const SBsecond = r.struct.filter(m => m !== SB && m.pass).sort((a, b) => b.total - a.total)[0];
+  const sh = r.shaft.find(x => x.id === 's1045');
+  const dSel = Math.max(40, Math.ceil(sh.d / 5) * 5);
+  const motors = [0.18, 0.25, 0.37, 0.55, 0.75, 1.1, 1.5, 2.2];
+  const Pmot = motors.find(m => m * 1000 >= 1.5 * r.P) || 3;
+  const rpmMin = 10 / 60 / (G.R_RELIEF / 1000) * 60 / (2 * Math.PI), rpmMax = 120 / 60 / (G.R_RELIEF / 1000) * 60 / (2 * Math.PI);
+  const nPl = Math.max(1, S.plates.length);
+  const bagRows = G.BAGS.map(b => {
+    const q = G.compute(Object.assign({}, p, { bagL: b.l, bagW: b.w, vert: 1 }));
+    return `<tr${b.id === S.bagId ? ' class="sel"' : ''}>${td(b.name)}${td(`${b.w}×${b.l}`, 1)}${td(n(q.usable), 1)}${td(q.stepRows ? q.stepRows * 10 + '°' : '–', 1)}${td(q.reg.k, 1)}${td(n(q.reg.pitch, 1), 1)}${td(n(q.reg.gap, 0), 1)}${td(q.reg.plates, 1)}${td(q.hStd, 1)}</tr>`;
+  });
+  const RG = APP.regFor();
+
+  const parts = {};
+  parts.head = `
+  <header class="doc-head">
+    <div class="doc-code"><span>Informe técnico IT-GOF-001 · Rev. 0</span><span>22 de octubre de 2026</span></div>
+    <h1>Unidad de gofrado para bolsas de punto de pago</h1>
+    <p class="sub">Selección de materiales y verificación del rodillo de marcado con placas ANLA intercambiables sobre tubería NPS 10.</p>
+    <dl class="meta">
+      <div><dt>Proyecto</dt><dd>Marcación de bolsas de material reciclado</dd></div>
+      <div><dt>Código marcado</dt><dd>${G.cleanText(S.text)}</dd></div>
+      <div><dt>Base de cálculo</dt><dd>Letra de ${pl.h} mm · ${p.nSim} placas en contacto</dd></div>
+      <div><dt>Estado</dt><dd>Diseño preliminar</dd></div>
+    </dl>
+  </header>
+  <div class="abstract">
+    <p>El rodillo grabador se especifica en tubería <b>${RB.name}</b>, NPS 10 Sch 40 (Ø273,05 × 9,27 mm), con una cara útil de 800 mm y una malla de 36 filas a 10° con 32 agujeros roscados M6 por fila. Las placas ANLA son de acero inoxidable AISI 304, roladas a R 136,5 mm y fijadas con dos espárragos M6. El bastidor se especifica en <b>${SB.name}</b>.</p>
+    <p>Con una presión de marcado de ${v(p.pMark, 1, 'MPa')} y ${p.nSim} placas en contacto, la fuerza de diseño en el nip es ${v(r.Fnip / 1000, 2, 'kN')}. El esfuerzo nominal en la sección perforada del tubo es ${v(r.sigma, 2, 'MPa')} y la flecha central ${v(r.defl * 1000, 1, 'µm')}. Ningún candidato queda cerca de su límite, de modo que la elección se decide por la fabricación de la malla, la soldabilidad, la disponibilidad en Colombia y el costo, que en la matriz de decisión del rodillo suman el 75 % del puntaje.</p>
+  </div>`;
+
+  parts.s1 = `
+  <p>Este informe define los materiales del bastidor y del rodillo de marcado de una unidad de gofrado de dos rodillos que imprime en relieve el código ANLA sobre bolsas tipo camiseta fabricadas con material reciclado. Verifica los componentes que soportan la carga de marcado con los datos de proceso de la Tabla 3 y documenta las normas, los precios de referencia y los supuestos usados.</p>
+  <p>El alcance cubre el cuerpo del rodillo grabador, las placas de marcado y su fijación, los muñones, los rodamientos, la transmisión y las placas laterales. Quedan por fuera el tablero eléctrico, el control de registro con la bolsera, las guardas de seguridad y el marcado en caliente.</p>`;
+
+  parts.s2 = `
+  <p>La unidad tiene dos rodillos horizontales que giran en sentidos opuestos, unidos por un par de engranajes 1:1. El superior es el rodillo grabador: un tramo de tubería NPS 10 Sch 40 con discos de cierre soldados y la superficie perforada con ${n(G.ROWS * G.COLS)} agujeros M6 pasantes. Las placas se atornillan en cualquier par de agujeros de una misma fila, así que su posición angular avanza en pasos de 10° y su posición axial en pasos de 25 mm. Cada placa se puede mover, duplicar o retirar sin tocar las demás: varias placas en una misma fila forman una tira a lo ancho de la bolsa, y placas en filas seguidas dejan marcas una encima de otra. Las placas se fabrican con letra de 10 a 40 mm; la longitud de la placa crece con el número de caracteres del código.</p>
+  <p>Como la película avanza con el radio del relieve (${n(G.R_RELIEF, 2)} mm) y no con el del tubo, una vuelta entrega ${n(G.FILM_REV, 1)} mm de película y una fila de la malla equivale a ${n(G.MARK_ARC, 2)} mm sobre la bolsa. Todas las separaciones entre marcas de este informe usan ese valor.</p>
+  <p>El inferior es el rodillo de presión: el mismo tubo con un recubrimiento de poliuretano de ${G.PU_T} mm y dureza ${G.PU_SHORE}. Solo el relieve de las letras toca la película; entre placas la superficie del tubo queda ${n(G.PLATE_T + G.RELIEF - G.PU_DELTA, 1)} mm por encima del poliuretano. Dos husillos ajustan la compresión del PU a ${n(G.PU_DELTA, 1)} mm, valor que iguala el radio de rodadura del PU con el radio del relieve (${n(G.R_RELIEF, 2)} mm) y evita deslizamiento entre la película y las letras.</p>
+  ${tbl('Geometría principal del rodillo grabador', ['Parámetro', { t: 'Valor', n: 1 }, 'Referencia'], [
+    `<tr>${td('Diámetro exterior × pared')}${td('273,05 × 9,27 mm', 1)}${td('ASME B36.10M, NPS 10 Sch 40')}</tr>`,
+    `<tr>${td('Diámetro interior')}${td(n(G.TUBE.ID, 2) + ' mm', 1)}${td('')}</tr>`,
+    `<tr>${td('Circunferencia exterior del tubo')}${td(n(G.TUBE.C, 1) + ' mm', 1)}${td('Base del trazado de la malla')}</tr>`,
+    `<tr>${td('Película por vuelta')}${td(n(G.FILM_REV, 1) + ' mm', 1)}${td('2π × radio del relieve')}</tr>`,
+    `<tr>${td('Malla de agujeros')}${td('36 × ' + G.COLS + ' = ' + n(G.ROWS * G.COLS), 1)}${td('M6 pasante, broca 5,0 mm')}</tr>`,
+    `<tr>${td('Paso angular')}${td('10°', 1)}${td(n(G.ROW_ARC, 2) + ' mm en el tubo, ' + n(G.MARK_ARC, 2) + ' mm en la película')}</tr>`,
+    `<tr>${td('Paso axial')}${td('25 mm', 1)}${td('Cara útil de ' + G.FACE + ' mm')}</tr>`,
+    `<tr>${td('Radio al tope del relieve')}${td(n(G.R_RELIEF, 3) + ' mm', 1)}${td('Tubo + placa 4,0 + letra 1,2')}</tr>`,
+    `<tr>${td('Rodillo de presión, Ø exterior')}${td(n(G.TUBE.OD + 2 * G.PU_T, 2) + ' mm', 1)}${td('PU ' + G.PU_SHORE + ', ' + G.PU_T + ' mm')}</tr>`,
+    `<tr>${td('Distancia entre centros')}${td(n(2 * G.R_RELIEF, 2) + ' mm', 1)}${td('Con 0,8 mm de compresión')}</tr>`,
+  ])}
+  <figure class="fig"><figcaption><span>Figura ${++figNo}.</span>Placa ANLA y su ajuste curvo sobre el tubo NPS 10</figcaption><div class="frame" id="figPlacaSlot"></div>
+  <div class="cap2">En la vista C el texto se dibuja legible para facilitar la lectura; en la placa real el relieve se mecaniza en espejo para que la huella se lea correctamente sobre la cara de la bolsa que toca el acero.</div></figure>`;
+
+  parts.s3 = `
+  <p>Las bolsas que se marcan son de tipo camiseta para puntos de pago. La Resolución 668 de 2016 del Ministerio de Ambiente exigía para estas bolsas un área de al menos 30 × 30 cm y un calibre de al menos 0,9 mils; la Resolución 803 de 2024 la derogó, pero sus valores se conservan aquí como límite inferior de tamaño y espesor. Las seis tallas de la Tabla 2 corresponden a medidas habituales de catálogo para este tipo de bolsa, desde la pequeña de 30 × 40 cm hasta la extra jumbo de 70 × 90 cm. Esta última define la cara útil de 800 mm.</p>
+  <p>El código debe quedar dentro del cuerpo de la bolsa, fuera de la soldadura de fondo (${G.SEAL} mm) y fuera del recorte de las asas, que ocupa el ${n(G.HANDLE_FRAC * 100)} % superior del alto. La unidad puede trabajar de dos maneras.</p>
+  <p><b>Modo continuo.</b> Las bolsas llegan sin sincronizar y, como su longitud no coincide con la película por vuelta, la marca cae a una altura distinta en cada una. Para que toda bolsa reciba al menos una marca completa, la mayor separación entre placas consecutivas debe ser menor que la zona útil menos el alto de la marca. El paso elegido es un divisor de 36 filas, de modo que el patrón se repite igual en cada vuelta.</p>
+  <p><b>Modo con registro.</b> Un sensor de borde y un alimentador de banda entregan cada bolsa en fase con el giro, de modo que el logo queda siempre a la misma altura medida desde el fondo. La altura estándar es el centro del cuerpo de la bolsa, entre la soldadura de fondo y el corte de las asas: ${n(G.hStd(S.bagL))} mm para la talla seleccionada. Si las bolsas salen separadas k filas (k × ${n(G.MARK_ARC, 2)} mm de línea), la bolsa número i recibe la placa de la fila i·k módulo 36; con g = mcd(k, 36) hacen falta placas en 36/g filas, separadas g × 10°. Se elige el k que deja al menos ${G.GAP_REG} mm entre bolsas, admite la placa y usa el menor número de placas sin perder más del 15 % de producción.</p>
+  <p>En los dos modos el número de logos por vuelta se reparte de forma uniforme: la placa i va en la fila redonda(i · 36/n), así que la separación es 360°/n cuando n divide a 36 y queda a ±5° del valor exacto en los demás casos. El máximo depende del tamaño del logo, porque una placa ocupa tantas filas como su ancho de arco: n ≤ 36 / filas por placa, es decir 36 con letra de 10–12 mm, 18 con letra de 16–26 mm y 12 con letra de 32–40 mm. En modo continuo el mínimo lo fija la bolsa; con registro, n debe ser múltiplo del número de filas que pide el registro, y cada múltiplo agrega un logo más en vertical por bolsa. Todo el reparto puede correrse a lo largo del eje en pasos de 25 mm, sin salirse del ancho de la bolsa.</p>
+  ${tbl('Tallas comerciales de bolsa y reparto recomendado con letra de ' + pl.h + ' mm (medidas en mm)', ['Talla', { t: 'Ancho × alto', n: 1 }, { t: 'Zona útil', n: 1 }, { t: 'Continuo, paso', n: 1 }, { t: 'Registro, k', n: 1 }, { t: 'Paso', n: 1 }, { t: 'Separación', n: 1 }, { t: 'Placas por carril', n: 1 }, { t: 'Altura estándar', n: 1 }], bagRows,
+    `Configuración actual del simulador: modo ${S.mode === 'reg' ? 'con registro' : 'continuo'}, ${S.plates.length} placas, ${S.nRev} logos por vuelta repartidos cada ${n(360 / S.nRev, 360 % S.nRev ? 1 : 0)}°, ${S.lanes} a lo ancho, desplazamiento lateral ${S.xOff} mm; ${chk.ok ? (S.mode === 'reg' ? 'todas las bolsas reciben el logo a ' + S.hMark + ' mm del fondo' : 'cada bolsa recibe al menos una marca') : 'hay bolsas que pueden salir sin marca'}.`, 'compact')}
+  <p>La Tabla 3 reúne los datos de entrada. Los campos son editables y todo el informe se recalcula al cambiarlos; el simulador usa los mismos valores.</p>
+  <div id="rp-inputs"></div>`;
+  tblNo = 3;
+
+  parts.s4 = `
+  <p>La película se marca cuando el relieve la empuja contra el poliuretano con una presión suficiente para deformarla plásticamente. Se adopta ${v(p.pMark, 1, 'MPa')}, que equivale al ${n(p.pMark / p.filmSy * 100)} % de la fluencia supuesta del PEAD reciclado; el elastómero concentra la deformación en los bordes de cada trazo, por lo que no hace falta alcanzar la fluencia en toda el área. Este valor es el supuesto con mayor incertidumbre del informe y se valida con la prueba descrita en la sección 12.</p>
+  <p>En cada instante solo trabaja la franja de las letras que está dentro de la huella del nip, de ancho ${v(p.nipB, 1, 'mm')}. El área de contacto se obtiene barriendo esa franja sobre el dibujo real del código ${G.cleanText(S.text)} en placa ${pl.size}: el área total de letras es ${v(r.Aletters, 0, 'mm²')} y la franja más cargada, que coincide con los trazos horizontales, toma ${v(r.Aband, 0, 'mm²')}.</p>
+  ${eq(row(sub('A', 'c'), mo('='), `<munder><mo>máx</mo><mi>y</mi></munder>`, mi('A'), par(row(mi('y'), mo(','), mi('y'), mo('+'), sub('b', 'n')))), `A<sub>c</sub> = ${n(r.Aband, 0)} mm²`)}
+  ${eq(row(sub('F', 'p'), mo('='), sub('p', 'm'), mo('·'), sub('A', 'c')), `F<sub>p</sub> = ${n(p.pMark, 1)} × ${n(r.Aband, 0)} = ${n(r.Fplate, 0)} N por placa`)}
+  ${eq(row(sub('F', 'n'), mo('='), sub('K', 'd'), mo('·'), sub('n', 's'), mo('·'), sub('F', 'p')), `F<sub>n</sub> = ${n(p.Kd, 2)} × ${p.nSim} × ${n(r.Fplate, 0)} = ${n(r.Fnip, 0)} N`)}
+  <p>El rodillo se modela como viga simplemente apoyada en los rodamientos, con luz ${v(p.span, 0, 'mm')}. La carga de marcado se ubica en el centro, que es la posición más desfavorable que permite la malla, y el peso propio del conjunto (${v(r.mRoll, 1, 'kg')}: tubo de ${n(r.tubeLen)} mm y dos discos de cierre) se trata como carga repartida.</p>
+  ${eq(row(mi('R'), mo('='), fr(sub('F', 'n'), mn(2)), mo('+'), fr(mi('W'), mn(2))), `R = ${n(r.Fnip / 2, 0)} + ${n(r.W / 2, 0)} = ${n(r.R, 0)} N en cada rodamiento`)}
+  ${eq(row(mi('M'), mo('='), fr(row(sub('F', 'n'), mi('L')), mn(4)), mo('+'), fr(row(mi('W'), mi('L')), mn(8))), `M = ${n(r.M / 1000, 1)} N·m`)}
+  <figure class="fig"><figcaption><span>Figura ${++figNo}.</span>Modelo de viga del rodillo grabador y diagrama de momento flector</figcaption><div class="frame">${beamSVG(r)}</div></figure>
+  <p>El par de accionamiento cubre la pérdida por histéresis del poliuretano en ambos rodillos. Con un coeficiente de rodadura de ${v(p.crr, 3)} y el radio del relieve como radio de trabajo:</p>
+  ${eq(row(mi('T'), mo('='), mn(2), sub('c', 'rr'), sub('F', 'n'), sub('r', 'r'), mo(';'), mspace(), mi('P'), mo('='), fr(row(mi('T'), mi('ω')), mi('η'))), `T = ${n(r.T / 1000, 1)} N·m · ω = ${n(r.omega, 2)} rad/s (${n(r.rpm, 1)} rpm) · P = ${n(r.P, 0)} W con η = ${n(p.eta, 2)}`)}`;
+
+  const rRows = r.roller.map(m => `<tr${m === RB ? ' class="sel"' : ''}>${td(m.name)}${td(m.Sy, 1)}${td(m.Sut, 1)}${td(n(m.Se, 1), 1)}${td(n(m.q, 2), 1)}${td(n(m.Kf, 2), 1)}${td(n(m.sa, 2), 1)}${td(n(m.nf, 1), 1)}${td(n(m.ny, 0), 1)}${td(okb(m.nf >= p.nReq && m.ny >= p.nReq))}</tr>`);
+  parts.s5 = `
+  <p>La sección crítica pasa por un anillo de agujeros: en cada posición axial de la malla hay 36 agujeros de 5,0 mm alrededor de la circunferencia, que restan el ${n((1 - r.sec.netFactor) * 100, 1)} % del perímetro medio. El momento de inercia para la flecha se toma con la sección llena, porque los agujeros ocupan franjas de 5 mm separadas 25 mm a lo largo del eje.</p>
+  ${eq(row(mi('I'), mo('='), fr(mi('π'), mn(64)), par(row(sup(mi('D'), mn(4)), mo('−'), sup(mi('d'), mn(4)))), mo(';'), mspace(), mi('S'), mo('='), fr(row(mn(2), mi('I')), mi('D'))), `I = ${n(r.sec.I / 1e4, 0)} cm⁴ · S = ${n(r.sec.S / 1000, 1)} cm³`)}
+  ${eq(row(sub('S', 'net'), mo('='), mi('S'), par(row(mn(1), mo('−'), fr(row(sub('n', 'h'), sub('d', 'b')), row(mi('π'), sub('D', 'm'))))), mo(';'), mspace(), mi('σ'), mo('='), fr(mi('M'), sub('S', 'net'))), `S<sub>net</sub> = ${n(r.sec.Snet / 1000, 1)} cm³ · σ = ${n(r.sigma, 2)} MPa`)}
+  ${eq(row(mi('δ'), mo('='), fr(row(sub('F', 'n'), sup(mi('L'), mn(3))), row(mn(48), mi('E'), mi('I'))), mo('+'), fr(row(mn(5), mi('w'), sup(mi('L'), mn(4))), row(mn(384), mi('E'), mi('I')))), `δ = ${n(r.defl * 1000, 2)} µm frente a ${n(p.deflMax * 1000, 0)} µm admisibles · ${okb(r.defl <= p.deflMax)}`)}
+  <p>El rodillo gira bajo una carga de dirección fija, así que cada punto de la superficie pasa de tracción a compresión en cada vuelta: la flexión es alternante pura y a ${n(r.rpm, 0)} rpm acumula ${n(r.rpm * 60 * 4000 / 1e6, 1)} millones de ciclos en un año de dos turnos (4.000 h). La resistencia a la fatiga se corrige con los factores de Marin para superficie mecanizada, tamaño (con el límite de 254 mm de la correlación) y confiabilidad del 99 %; la sensibilidad a la entalla q sale de la constante de Neuber para el radio del agujero de 2,5 mm.</p>
+  ${eq(row(sub('K', 'f'), mo('='), mn(1), mo('+'), mi('q'), par(row(sub('K', 't'), mo('−'), mn(1))), mo(';'), mspace(), mi('q'), mo('='), fr(mn(1), row(mn(1), mo('+'), fr(`<msqrt><mi>a</mi></msqrt>`, `<msqrt><mi>r</mi></msqrt>`)))), `K<sub>t</sub> = ${n(p.Kt, 1)}`)}
+  ${eq(row(sub('S', 'e'), mo('='), sub('k', 'a'), sub('k', 'b'), sub('k', 'e'), mo('·'), mn('0,5'), sub('S', 'ut'), mo(';'), mspace(), sub('n', 'f'), mo('='), fr(sub('S', 'e'), row(sub('K', 'f'), mi('σ'))), mo(';'), mspace(), sub('n', 'y'), mo('='), fr(sub('S', 'y'), mi('σ'))), `k<sub>b</sub> = ${n(r.roller[0].kb, 3)} · k<sub>e</sub> = ${n(p.ke, 3)}`)}
+  ${tbl('Verificación del cuerpo del rodillo por candidato (MPa)', ['Material', { t: 'S<sub>y</sub>', n: 1 }, { t: 'S<sub>ut</sub>', n: 1 }, { t: 'S<sub>e</sub>', n: 1 }, { t: 'q', n: 1 }, { t: 'K<sub>f</sub>', n: 1 }, { t: 'σ<sub>a</sub>', n: 1 }, { t: 'n<sub>f</sub>', n: 1 }, { t: 'n<sub>y</sub>', n: 1 }, 'Resultado'], rRows,
+    'Propiedades mínimas de norma. La fila resaltada es el material seleccionado en la sección 9.')}
+  <p>Todos los candidatos superan el factor mínimo de ${n(p.nReq, 1)} por más de un orden de magnitud. El tubo NPS 10 está dimensionado por la geometría que necesita la malla (circunferencia para las tallas de bolsa, pared para el roscado) y no por la carga, por lo que un acero de mayor resistencia no aporta seguridad útil.</p>`;
+
+  const tRows = r.roller.map(m => `<tr${m === RB ? ' class="sel"' : ''}>${td(m.name)}${td(m.Sy, 1)}${td(n(m.LeReq, 1), 1)}${td(G.STUD_L, 1)}${td(n(m.thread, 2), 1)}${td(okb(m.thread >= 1))}</tr>`);
+  parts.s6 = `
+  <p>Cada placa lleva dos espárragos M6 de acero inoxidable A2-70 soldados por descarga de capacitor en su cara interior, de ${G.STUD_L} mm de largo para no sobresalir en la pared de ${n(G.TUBE.t, 2)} mm. La presión de marcado empuja la placa contra el tubo, así que los espárragos no trabajan a tracción en servicio; su función es ubicar la placa y resistir la fuerza tangencial si el PU desliza sobre el relieve.</p>
+  ${eq(row(mi('τ'), mo('='), fr(row(mi('μ'), sub('K', 'd'), sub('F', 'p')), row(mn(2), sub('A', 's')))), `τ = ${n(r.tauStud, 1)} MPa · n = 0,577 × 450 / τ = ${n(r.nStud, 1)} · ${okb(r.nStud >= p.nReq)}`)}
+  <p>La rosca interior del tubo debe resistir el arrancamiento antes de que falle el espárrago. La longitud de rosca necesaria compara la carga de fluencia del espárrago con el área de corte de los filetes del tubo:</p>
+  ${eq(row(sub('L', 'e,req'), mo('='), fr(row(sub('A', 's'), sub('S', 'y,e')), row(mn('0,577'), sub('S', 'y,t'), mo('·'), mn('0,75'), mi('π'), mi('d')))), `A<sub>s</sub> = 20,1 mm² · S<sub>y,e</sub> = 450 MPa (A2-70) · longitud disponible ${G.STUD_L} mm`)}
+  ${tbl('Longitud de rosca necesaria en la pared del tubo', ['Material del tubo', { t: 'S<sub>y</sub>, MPa', n: 1 }, { t: 'L<sub>e,req</sub>, mm', n: 1 }, { t: 'Disponible, mm', n: 1 }, { t: 'Relación', n: 1 }, 'Resultado'], tRows)}`;
+
+  const sRows = r.shaft.map(m => `<tr${m.id === 's1045' ? ' class="sel"' : ''}>${td(m.name)}${td(m.Sy, 1)}${td(m.Sut, 1)}${td(n(m.d, 1), 1)}</tr>`);
+  parts.s7 = `
+  <p>Los muñones son ejes cortos de acero soldados a los discos de cierre, con asiento de rodamiento a ${v(p.overhang, 0, 'mm')} de la cara del disco. Se dimensionan con el criterio ED-ASME elíptico para flexión alternante y torsión constante, con K<sub>f</sub> = ${n(p.shaftKf, 1)} en el hombro, K<sub>fs</sub> = ${n(p.shaftKfs, 1)} y factor de seguridad ${n(p.shaftN, 1)}.</p>
+  ${eq(row(mi('d'), mo('='), sup(par(row(fr(row(mn(16), mi('n')), mi('π')), sup(`<mrow><mo>[</mo>${row(mn(4), sup(par(fr(row(sub('K', 'f'), sub('M', 'a')), sub('S', 'e'))), mn(2)), mo('+'), mn(3), sup(par(fr(row(sub('K', 'fs'), mi('T')), sub('S', 'y'))), mn(2)))}<mo>]</mo></mrow>`, fr(mn(1), mn(2))))), fr(mn(1), mn(3)))), `M<sub>a</sub> = ${n(r.Ma / 1000, 1)} N·m · T = ${n(r.T / 1000, 1)} N·m`)}
+  ${tbl('Diámetro mínimo del muñón', ['Material', { t: 'S<sub>y</sub>, MPa', n: 1 }, { t: 'S<sub>ut</sub>, MPa', n: 1 }, { t: 'd mínimo, mm', n: 1 }], sRows,
+    `Se adopta SAE 1045 con asiento de ${dSel} mm para rodamiento de brida UCF208.`)}
+  <p>El SAE 1045 da el diámetro mínimo con buena maquinabilidad y se consigue en barra en cualquier distribuidor; el 4140 apenas reduce el diámetro y cuesta más. Con asiento de ${dSel} mm el muñón queda sobrado, porque lo fija el tamaño del rodamiento y no la resistencia.</p>
+  ${eq(row(sub('L', '10h'), mo('='), sup(par(fr(mi('C'), mi('R'))), mn(3)), fr(sup(mn(10), mn(6)), row(mn(60), mi('n')))), `C ≈ ${n(p.bearingC / 1000, 1)} kN · L<sub>10h</sub> = ${n(r.L10h, 0)} h frente a ${n(p.life)} h requeridas · ${okb(r.L10h >= p.life)}`)}
+  <p>La vida de los rodamientos excede el objetivo, de modo que el UCF208 queda definido por el diámetro del muñón y la disponibilidad. La transmisión usa engranajes rectos de módulo 3 y 94 dientes (diámetro primitivo 282 mm) con corrección positiva de perfil de aproximadamente +0,24 en cada rueda para alcanzar la distancia entre centros de ${n(2 * G.R_RELIEF, 2)} mm. El motorreductor necesita ${n(r.P, 0)} W a ${p.speed} m/min; se especifica uno de ${n(Pmot, 2)} kW con variador, para cubrir de ${n(rpmMin, 0)} a ${n(rpmMax, 0)} rpm entre 10 y 120 m/min.</p>`;
+
+  const stRows = r.struct.map(m => `<tr${m === SB ? ' class="sel"' : ''}>${td(m.name)}${td(m.Sy, 1)}${td(n(r.sTensSide, 2), 1)}${td(n(r.sYoke, 2), 1)}${td(n(m.ny, 1), 1)}${td(okb(m.pass))}</tr>`);
+  parts.s8 = `
+  <p>Cada placa lateral es una lámina de ${p.sidePlateT} mm, de ${p.sidePlateW} mm de ancho, con una ventana de ${p.slotW} mm por donde corre el bloque del rodamiento superior. El husillo empuja ese bloque hacia abajo y la reacción del rodillo inferior sube por el mismo lado, de modo que la placa trabaja en tracción en las dos columnas de la ventana y en flexión en el puente superior, que se modela como viga simplemente apoyada de ${p.yokeSpan} mm con la carga del husillo en el centro.</p>
+  ${eq(row(sub('σ', 't'), mo('='), fr(mi('R'), row(mi('t'), par(row(mi('b'), mo('−'), mi('s'))))), mo(';'), mspace(), sub('σ', 'p'), mo('='), fr(row(mi('R'), mi('l'), mo('/'), mn(4)), row(mi('t'), sup(mi('h'), mn(2)), mo('/'), mn(6)))), `σ<sub>t</sub> = ${n(r.sTensSide, 2)} MPa · σ<sub>p</sub> = ${n(r.sYoke, 2)} MPa (puente de ${p.yokeH} mm de alto)`)}
+  ${tbl('Verificación del bastidor por candidato (MPa)', ['Material', { t: 'S<sub>y</sub>', n: 1 }, { t: 'σ<sub>t</sub>', n: 1 }, { t: 'σ<sub>p</sub>', n: 1 }, { t: 'n<sub>y</sub>', n: 1 }, 'Resultado'], stRows)}
+  <p>Los esfuerzos son bajos y las soldaduras del bastidor quedan en la categoría de detalle más favorable de AWS D1.1 para este rango de esfuerzo. El espesor de ${p.sidePlateT} mm lo fijan la rigidez lateral, el apoyo de los rodamientos de brida y la rosca de sus pernos, no la tracción.</p>`;
+
+  const short = { fat: 'Fatiga', thread: 'Rosca', mach: 'Maquin.', weld: 'Soldab.', corr: 'Corros.', avail: 'Dispon.', cost: 'Costo', str: 'Resist.' };
+  const key = { fat: 'Fatiga', thread: 'Rosca M6', mach: 'Maquinabilidad', weld: 'Soldabilidad', corr: 'Corrosión', avail: 'Disponibilidad', cost: 'Costo', str: 'Resistencia' };
+  const mRow = (m, W, best) => `<tr${m === best ? ' class="sel"' : ''}>${td(m.name)}${Object.keys(W).map(k => td(n(m.scores[k], 1), 1)).join('')}${td('<b>' + n(m.total, 1) + '</b>', 1)}</tr>`;
+  const critR = [
+    ['Fatiga en la malla', r.RW.fat, 'Calculado: 1 punto en n<sub>f</sub> = ' + n(p.nReq, 1) + ' y 5 en n<sub>f</sub> ≥ ' + n(3 * p.nReq, 1)],
+    ['Agarre de rosca M6', r.RW.thread, 'Calculado: relación L disponible / L<sub>e,req</sub> de 1,0 a 1,8'],
+    ['Maquinabilidad', r.RW.mach, 'Taladrado y roscado de ' + n(G.ROWS * G.COLS) + ' agujeros y torneado del diámetro exterior'],
+    ['Soldabilidad', r.RW.weld, 'Unión de discos de cierre y muñones sin precalentamiento'],
+    ['Resistencia a la corrosión', r.RW.corr, 'Peso bajo: el tubo no toca la película'],
+    ['Disponibilidad NPS 10', r.RW.avail, 'Inventario en distribuidores colombianos'],
+    ['Costo del tramo', r.RW.cost, 'Calculado: 5 al más barato y 1 al más caro'],
+  ];
+  const critS = [
+    ['Resistencia', r.SW.str, 'Calculado con n<sub>y</sub>, misma escala que la fatiga'],
+    ['Soldabilidad', r.SW.weld, 'Bastidor soldado en taller general'],
+    ['Maquinabilidad', r.SW.mach, 'Ventanas, asientos de brida y roscas'],
+    ['Disponibilidad', r.SW.avail, 'Ferreterías, Homecenter y distribuidores de acero'],
+    ['Costo', r.SW.cost, 'Calculado sobre ' + p.structMass + ' kg de estructura'],
+    ['Resistencia a la corrosión', r.SW.corr, 'Ambiente de planta seco, con pintura'],
+  ];
+  const pRows = [...r.roller, ...r.struct].map(m => `<tr>${td(m.name)}${td(m.form)}${td(m.std)}${td(m.Sy + ' / ' + m.Sut, 1)}${td(n(m.price), 1)}${td(m.priceSrc === 'est' ? 'Estimado' : 'Lista')}</tr>`);
+  parts.s9 = `
+  <p>La selección usa una matriz de decisión ponderada. Cada criterio recibe un puntaje de 1 a 5 y un peso; el total se normaliza a 100. Los criterios de resistencia, rosca y costo se puntúan con fórmulas a partir de los resultados de las secciones 5, 6 y 8, de modo que cambian con los datos de entrada. Los criterios de fabricación, corrosión y disponibilidad se puntúan con la escala cualitativa indicada al pie de la Tabla 10, con la justificación de la Tabla 8 y de las notas de cada candidato.</p>
+  ${tbl('Candidatos, normas y precio de referencia', ['Material', 'Forma comercial', 'Norma', { t: 'S<sub>y</sub> / S<sub>ut</sub>, MPa', n: 1 }, { t: 'COP/kg', n: 1 }, 'Precio'], pRows,
+    'Lista: precio publicado por un distribuidor en Bogotá, convertido a COP/kg con la masa nominal de la pieza. Estimado: valor de proyecto que debe confirmarse con cotización. Detalle de fuentes en las referencias.')}
+  ${tbl('Criterios y pesos para el cuerpo del rodillo', ['Criterio', { t: 'Peso, %', n: 1 }, 'Base del puntaje'], critR.map(c => `<tr>${td(c[0])}${td(c[1], 1)}${td(c[2])}</tr>`))}
+  ${tbl('Matriz de decisión del cuerpo del rodillo', ['Material', ...Object.keys(r.RW).map(k => ({ t: short[k], n: 1 })), { t: 'Total', n: 1 }], r.roller.map(m => mRow(m, r.RW, RB)),
+    'Escala cualitativa: 5 excelente, 4 buena, 3 aceptable con precauciones, 2 deficiente, 1 inadecuada. Los nombres completos de los criterios están en la Tabla 9.', 'compact')}
+  <figure class="fig"><figcaption><span>Figura ${++figNo}.</span>Puntaje total de los candidatos para el cuerpo del rodillo</figcaption><div class="frame">${bars(r.roller, RB, key)}</div></figure>
+  <p>${RB.name} obtiene el mayor puntaje (${n(RB.total, 1)}). ${RB.note} Tiene la mejor combinación de disponibilidad y costo, y su bajo carbono permite soldar los discos de cierre y los muñones sin precalentamiento. ${RBsecond ? `${RBsecond.name} queda segundo con ${n(RBsecond.total, 1)} puntos. ${RBsecond.note}` : ''} Es frecuente que la tubería se venda con certificación múltiple A53 B, A106 B y API 5L; si el proveedor la ofrece así, cumple esta especificación.</p>
+  ${tbl('Criterios y pesos para el bastidor', ['Criterio', { t: 'Peso, %', n: 1 }, 'Base del puntaje'], critS.map(c => `<tr>${td(c[0])}${td(c[1], 1)}${td(c[2])}</tr>`))}
+  ${tbl('Matriz de decisión del bastidor', ['Material', ...Object.keys(r.SW).map(k => ({ t: short[k], n: 1 })), { t: 'Total', n: 1 }], r.struct.map(m => mRow(m, r.SW, SB)), 'Los nombres completos de los criterios están en la Tabla 11.', 'compact')}
+  <figure class="fig"><figcaption><span>Figura ${++figNo}.</span>Puntaje total de los candidatos para el bastidor</figcaption><div class="frame">${bars(r.struct, SB, key)}</div></figure>
+  <p>${SB.name} es la mejor opción para las placas laterales, los puentes y los bloques (${n(SB.total, 1)} puntos). ${SB.note} ${SBsecond ? (SBsecond.id === 'a500' ? `${SBsecond.name} queda segundo con ${n(SBsecond.total, 1)} puntos y se usa en la base: ${SBsecond.note.charAt(0).toLowerCase() + SBsecond.note.slice(1)}` : `${SBsecond.name} queda segundo con ${n(SBsecond.total, 1)} puntos. La base se mantiene en ASTM A500 Gr. C por su forma tubular.`) : ''}</p>`;
+
+  const priceOf = id => [...r.roller, ...r.struct].find(m => m.id === id).price;
+  const P1045 = 7500, P304 = 14430;
+  const mDisc4 = 4 * r.mDisc, mShaft = 4 * Math.PI / 4 * 50 * 50 * 250 * 7.85e-6;
+  const mPlate = S.plates.reduce((s, q) => { const g = APP.geom(q.h, S.text); return s + g.L * g.W * 6 * 7.93e-6; }, 0) || 0;
+  const bom = [
+    ['Cuerpo del rodillo grabador', RB.name + ', NPS 10 Sch 40', RB.std, n(r.tubeLen) + ' mm', r.mTube, r.mTube * RB.price],
+    ['Cuerpo del rodillo de presión', RB.name + ', NPS 10 Sch 40', RB.std, n(r.tubeLen) + ' mm', r.mTube, r.mTube * RB.price],
+    ['Recubrimiento del rodillo de presión', 'Poliuretano colado ' + G.PU_SHORE, '—', G.PU_T + ' mm × ' + G.FACE + ' mm', null, null],
+    ['Discos de cierre (4)', SB.name + ', placa 25 mm', SB.std, 'Ø' + n(G.TUBE.ID, 1) + ' mm', mDisc4, mDisc4 * SB.price],
+    ['Muñones (4)', 'SAE 1045 HR, barra Ø50', 'SAE J403', '250 mm en bruto, asiento Ø' + dSel, mShaft, mShaft * P1045],
+    ['Placas laterales, puentes y bloques', SB.name, SB.std, 'Placa ' + p.sidePlateT + ' mm', 45, 45 * SB.price],
+    ['Base', 'ASTM A500 Gr. C, 80 × 80 × 4', 'ASTM A500/A500M', '≈ 4,3 m', 40, 40 * priceOf('a500')],
+    ['Placas de marcado (' + S.plates.length + ')', 'AISI 304, lámina 6 mm', 'ASTM A240/A240M', 'Letra de 10 a 40 mm', mPlate, mPlate * P304],
+    ['Espárragos (' + 2 * S.plates.length + ')', 'M6 × 8, A2-70', 'ISO 3506-1', 'Soldadura por capacitor', null, null],
+    ['Rodamientos (4)', 'UCF208, brida cuadrada', 'Catálogo del fabricante', 'Ø40 mm', null, null],
+    ['Engranajes (2)', 'SAE 1045, m 3, z 94', 'ISO 53', 'Corrección x ≈ +0,24', null, null],
+    ['Motorreductor', n(Pmot, 2) + ' kW con variador', 'IEC 60034', '≈ 70 rpm a 60 m/min', null, null],
+  ];
+  const tot = bom.reduce((s, b) => s + (b[5] || 0), 0);
+  parts.s10 = `
+  <p>La Tabla 13 resume la especificación resultante. Los costos son solo del material en bruto, con los precios de la Tabla 8; los componentes comprados y los servicios se dejan para cotización.</p>
+  ${tbl('Especificación de componentes y costo de material', ['Componente', 'Material o referencia', 'Norma', 'Dimensión', { t: 'Masa, kg', n: 1 }, { t: 'Costo, COP', n: 1 }],
+    bom.map(b => `<tr>${td(b[0])}${td(b[1])}${td(b[2])}${td(b[3])}${td(b[4] == null ? '—' : n(b[4], 1), 1)}${td(b[5] == null ? 'Cotizar' : cop(b[5]), 1)}</tr>`),
+    `Total de acero en bruto: <b>${cop(tot)}</b>. Los tramos de tubería suelen venderse en 6 m; si el proveedor no corta a medida, el costo de compra sube aunque el resto del tramo quede disponible para repuestos.`)}
+  <p>Las placas de marcado se especifican en AISI 304 aunque el tubo sea de acero al carbono, porque son la única pieza metálica que toca la película: un óxido superficial en el relieve mancharía la bolsa. Su masa es pequeña, así que el sobrecosto del inoxidable es marginal.</p>`;
+
+  parts.s11 = `
+  <p>El tubo se corta con 40 mm de demasía, se sueldan los discos de cierre y los muñones con electrodo E7018 o alambre ER70S-6, y se tornea el diámetro exterior entre centros después de soldar. La excentricidad total admisible es 0,05 mm, menos del 7 % de la compresión del PU, para que la presión de marcado no varíe a lo largo de la vuelta.</p>
+  <p>La malla se taladra con divisor o cuarto eje: 36 posiciones a 10° con ${G.COLS} agujeros cada una, broca de 5,0 mm y macho M6 de paso 1,0 hasta atravesar la pared, con avellanado de 0,5 mm a 90° en la cara exterior. Las posiciones se trazan desde una generatriz de referencia marcada en el disco de cierre, que también sirve para fijar el cero de la escala angular del simulador.</p>
+  <p>Las placas se fresan en plano sobre lámina de 304 de 6 mm: se planea a 5,2 mm, se deja el relieve de las letras en espejo con 1,2 mm de altura y se rebaja el resto a 4,0 mm. Después se rolan a R ${n(G.TUBE.R, 1)} mm en roladora de tres rodillos contra una plantilla, y al final se sueldan los dos espárragos. El ajuste se acepta si la galga de 0,1 mm no entra entre placa y tubo en ningún borde.</p>
+  <p>El bastidor se suelda en taller general, se alivia por vibración si se observa distorsión en las ventanas y se pinta con anticorrosivo epóxico y esmalte. El paralelismo entre los ejes de los dos rodillos se verifica con reloj comparador: 0,05 mm en la cara de 600 mm.</p>`;
+
+  parts.s12 = `
+  <p>La presión de marcado de ${n(p.pMark, 1)} MPa y el ancho de huella de ${n(p.nipB, 1)} mm son supuestos. Antes de fabricar el rodillo se recomienda una prueba con una sola placa en prensa: marcar muestras de la película real a presiones crecientes y elegir la menor presión que deja el código legible a 30 cm. La misma prueba, repetida en la máquina con película sensible a presión entre el relieve y el PU, confirma el ancho de huella y la uniformidad a lo largo de la cara.</p>
+  <p>Los precios marcados como estimados en la Tabla 8 deben cotizarse; el resultado de la matriz para el rodillo depende sobre todo del costo y la disponibilidad, así que una cotización muy distinta puede cambiar el orden entre A53 B, A106 B y API 5L. El concentrador K<sub>t</sub> = ${n(p.Kt, 1)} se tomó de curvas para placa plana; aun duplicándolo, el factor de fatiga del material seleccionado sigue por encima de ${n(RB.nf / 2, 0)}.</p>
+  <p>El modo con registro supone un alimentador que entrega cada bolsa en fase con el rodillo a partir de un sensor de borde; su diseño mecánico y de control no está en el alcance. Para bolsas más largas que una vuelta (${n(G.FILM_REV, 0)} mm) el registro con engranajes obliga a dejar una separación grande entre bolsas; si esa pérdida de producción no es aceptable, el rodillo grabador debe accionarse con servomotor para ajustar la fase bolsa por bolsa. El cálculo no incluye calentamiento del relieve ni choque térmico.</p>`;
+
+  parts.ref = `<ol class="refs">
+    <li>ASME B36.10M. <i>Welded and Seamless Wrought Steel Pipe</i>. Dimensiones de NPS 10 Sch 40.</li>
+    <li>ASTM A53/A53M; ASTM A106/A106M; API Spec 5L; ASTM A519; ASTM A312/A312M. Especificaciones de tubería.</li>
+    <li>ASTM A36/A36M (NTC 1920); ASTM A572/A572M (NTC 1985); ASTM A500/A500M; ASTM A240/A240M; SAE J403.</li>
+    <li>ISO 3506-1. Propiedades mecánicas de elementos de fijación de acero inoxidable, clase A2-70.</li>
+    <li>AWS D1.1/D1.1M. <i>Structural Welding Code — Steel</i>.</li>
+    <li>Budynas, R. y Nisbett, K. <i>Diseño en ingeniería mecánica de Shigley</i>, 10.ª ed. McGraw-Hill. Cap. 6 (factores de Marin, constante de Neuber) y cap. 7 (criterio ED-ASME).</li>
+    <li>Pilkey, W. y Pilkey, D. <i>Peterson's Stress Concentration Factors</i>, 3.ª ed. Wiley. Fila de agujeros bajo tracción.</li>
+    <li>Ministerio de Ambiente y Desarrollo Sostenible. <a href="https://normas.cra.gov.co/Gestor/Docs/resolucion_minambienteds_0668_2016.htm" target="_blank" rel="noopener">Resolución 668 de 2016</a>, uso racional de bolsas plásticas, derogada por la Resolución 803 de 2024.</li>
+    <li>G&amp;J Ferretería. <a href="https://gyj.com.co/bogota_65/lamina-hot-rolled-bogota-65-acero-industrial.html" target="_blank" rel="noopener">Lista de lámina HR A36</a>, Bogotá: placa 12 × 1220 × 2440 mm a $1.635.012. Consulta de octubre de 2026.</li>
+    <li>G&amp;J Ferretería. <a href="https://ofertas.gyj.com.co/producto/lamina-acero-inox-1-50/" target="_blank" rel="noopener">Lámina de acero inoxidable 304 2B</a> de 1,5 × 1220 × 2440 mm a $510.859, y <a href="https://ofertas.gyj.com.co/producto-categoria/tuberia/" target="_blank" rel="noopener">tubería A106 SCH 80</a>. Consulta de octubre de 2026.</li>
+    <li>Comando Construcciones. <a href="https://www.comandoconstrucciones.com/precios-acero-colombia-2026-tabla-actualizada-kilo/" target="_blank" rel="noopener">Precios del acero en Colombia 2026</a>, tubería estructural de 4.500 a 5.000 COP/kg en Bogotá.</li>
+    <li>Homecenter Colombia. <a href="https://www.homecenter.com.co/homecenter-co/category/cat1690131/angulos-platinas-cuadrados-y-redondos/" target="_blank" rel="noopener">Ángulos, platinas, cuadrados y redondos</a>: ángulo de 2 × 3/16 in × 6 m a $135.700. Consulta de octubre de 2026.</li>
+  </ol>
+  <div class="sign"><div>Elaboró</div><div>Revisó</div><div>Aprobó</div></div>`;
+  return parts;
+}
+function mspace() { return '<mspace width="1.2em"/>'; }
+
+function inputsTable() {
+  const rows = INPUTS.map(([k, label, unit, st, note]) => `<tr>${td(label)}${td(`<input type="number" id="in-${k}" data-k="${k}" step="${st}" value="${S[k]}" aria-label="${label}">`, 1)}${td(unit)}${td(note)}</tr>`);
+  tblNo = 2;
+  return tbl('Datos de entrada del cálculo (editables)', ['Dato', { t: 'Valor', n: 1 }, 'Unidad', 'Origen'], rows);
+}
+
+let built = false;
+function build() {
+  const sheet = $('sheet');
+  sheet.innerHTML = `<div id="rp-head"></div>` + SECTIONS.map(([id, t], i) => `<section id="${id}"><h2><span>${id === 'ref' ? '' : i + 1}</span>${t}</h2><div id="${id}-body"></div></section>`).join('');
+  $('toc').innerHTML = '<b>Contenido</b>' + SECTIONS.map(([id, t], i) => `<a href="#${id}"><span>${id === 'ref' ? '·' : i + 1}</span>${t}</a>`).join('');
+  $('toc').addEventListener('click', e => { const a = e.target.closest('a'); if (!a) return; e.preventDefault(); $(a.getAttribute('href').slice(1)).scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  built = true;
+}
+function update() {
+  if (!built) build();
+  const parts = render();
+  $('rp-head').innerHTML = parts.head;
+  for (const [id] of SECTIONS) {
+    if (id === 's3') {
+      const keep = $('rp-inputs');
+      const body = $('s3-body');
+      if (keep && keep.dataset.ready) { keep.remove(); body.innerHTML = parts.s3; $('rp-inputs').replaceWith(keep); }
+      else { body.innerHTML = parts.s3; const box = $('rp-inputs'); box.innerHTML = inputsTable(); box.dataset.ready = '1'; }
+    } else $(id + '-body').innerHTML = parts[id];
+  }
+  const slot = $('figPlacaSlot'), tpl = $('figPlacaTpl');
+  if (slot && tpl) slot.innerHTML = tpl.innerHTML;
+}
+document.addEventListener('input', e => {
+  const k = e.target.dataset && e.target.dataset.k; if (!k) return;
+  const val = parseFloat(e.target.value); if (!isFinite(val) || val <= 0) return;
+  const patch = { [k]: k === 'nSim' ? Math.max(1, Math.round(val)) : val };
+  if (k === 'bagW' || k === 'bagL') patch.bagId = 'c';
+  APP.set(patch, 'report');
+});
+document.addEventListener('mousemove', e => {
+  const row = e.target.closest && e.target.closest('.bar-row');
+  let tip = document.querySelector('.bar-tip');
+  if (!row) { if (tip) tip.remove(); return; }
+  if (!tip) { tip = document.createElement('div'); tip.className = 'bar-tip'; document.body.append(tip); }
+  tip.innerHTML = row.dataset.tip.replace(/ {2,}/g, m => '&nbsp;'.repeat(m.length));
+  const x = Math.min(innerWidth - tip.offsetWidth - 10, e.clientX + 14), y = Math.min(innerHeight - tip.offsetHeight - 10, e.clientY + 14);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px'; tip.style.position = 'fixed';
+});
+let pending = false, visible = false;
+APP.on((patch, src) => {
+  if (src === 'report') {
+    for (const k of Object.keys(patch)) { const el = $('in-' + k); if (el && document.activeElement !== el) el.value = patch[k]; }
+  } else for (const [k] of INPUTS) { const el = $('in-' + k); if (el && document.activeElement !== el) el.value = S[k]; }
+  if (!visible) { pending = true; return; }
+  clearTimeout(update.t); update.t = setTimeout(update, 120);
+});
+window.REPORT = { show() { visible = true; if (pending || !built) { pending = false; update(); } }, hide() { visible = false; }, update };
+
+/* pestañas */
+const tabSim = $('tabSim'), tabRep = $('tabRep');
+function show(rep) {
+  tabSim.setAttribute('aria-selected', String(!rep)); tabRep.setAttribute('aria-selected', String(rep));
+  $('sim').hidden = rep; $('report').hidden = !rep;
+  if (rep) window.REPORT.show(); else window.REPORT.hide();
+  try { localStorage.setItem('gof-tab', rep ? 'rep' : 'sim'); } catch (e) {}
+}
+tabSim.addEventListener('click', () => show(false));
+tabRep.addEventListener('click', () => show(true));
+let start = location.hash === '#informe';
+try { if (!location.hash && localStorage.getItem('gof-tab') === 'rep') start = true; } catch (e) {}
+show(start);
+})();
+
+</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const G = window.GOF, APP = window.APP, S = APP.s;
+const U = 0.01;                                   // 1 unidad = 100 mm
+const R_T = G.TUBE.R * U, R_IN = G.TUBE.ID / 2 * U;
+const R_REL = G.R_RELIEF * U;
+const R_PU = (G.TUBE.R + G.PU_T) * U;
+const FILM_Y = 0.004;
+const yT = R_REL, yB = FILM_Y - R_PU;
+const FACE = G.FACE * U, TUBE_L = (G.FACE + 40) * U;
+const XP = TUBE_L / 2 + 0.36;                     // cara interior de las placas laterales
+const PL_T = 0.12;
+const LINE0 = -14.5, LINE1 = 14.5, GAP = 0.6;
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt = (n, d = 0) => Number(n).toLocaleString('es-CO', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+/* ───────── Render ───────── */
+const canvas = $('gl');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); }
+catch (e) { $('sim').insertAdjacentHTML('beforeend', '<div id="fallback">Este navegador no puede mostrar WebGL. Prueba con Chrome, Edge o Firefox actualizados. El informe técnico sigue disponible en la pestaña superior.</div>'); throw e; }
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+const BG = new THREE.Color(css('--bg'));
+const scene = new THREE.Scene();
+scene.background = BG;
+scene.fog = new THREE.Fog(BG, 26, 62);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+const camera = new THREE.PerspectiveCamera(36, 1, 0.05, 140);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.minDistance = 2.2; controls.maxDistance = 36; controls.maxPolarAngle = Math.PI * 0.495;
+
+scene.add(new THREE.HemisphereLight(0xbfd4e6, 0x1a1410, 0.35));
+const key = new THREE.DirectionalLight(0xfff1de, 1.6);
+key.position.set(9, 16, 11); key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, near: 1, far: 60 });
+key.shadow.bias = -0.0004; key.shadow.normalBias = 0.03;
+scene.add(key);
+const rim = new THREE.DirectionalLight(0x8fb8ff, 0.55); rim.position.set(-10, 5, -12); scene.add(rim);
+
+function brushed(rows = 512) {
+  const c = document.createElement('canvas'); c.width = 8; c.height = rows;
+  const g = c.getContext('2d');
+  for (let y = 0; y < rows; y++) { const v = 62 + Math.random() * 50; g.fillStyle = `rgb(${v},${v},${v})`; g.fillRect(0, y, 8, 1); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+function hatch() {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 16;
+  const g = c.getContext('2d'); g.fillStyle = '#e4ece8'; g.fillRect(0, 0, 64, 16);
+  g.strokeStyle = 'rgba(70,95,90,.55)'; g.lineWidth = 2;
+  for (let x = -16; x < 80; x += 6) { g.beginPath(); g.moveTo(x, 16); g.lineTo(x + 8, 0); g.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const M = {
+  tube: new THREE.MeshStandardMaterial({ color: 0x8d969f, metalness: 1, roughness: 1, roughnessMap: brushed() }),
+  tubeEnd: new THREE.MeshStandardMaterial({ color: 0x5f6870, metalness: 0.9, roughness: 0.45, side: THREE.DoubleSide }),
+  ss: new THREE.MeshStandardMaterial({ color: 0xe9edf1, metalness: 1, roughness: 0.22 }),
+  ssLet: new THREE.MeshStandardMaterial({ color: 0xf4f6f8, metalness: 1, roughness: 0.16, emissive: 0xf0a43a, emissiveIntensity: 0 }),
+  hole: new THREE.MeshBasicMaterial({ color: 0x07090b }),
+  pu: new THREE.MeshStandardMaterial({ color: 0xc8662b, metalness: 0, roughness: 0.62 }),
+  frame: new THREE.MeshStandardMaterial({ color: 0x2c3a47, metalness: 0.35, roughness: 0.55 }),
+  base: new THREE.MeshStandardMaterial({ color: 0x24303a, metalness: 0.35, roughness: 0.6 }),
+  dark: new THREE.MeshStandardMaterial({ color: 0x4d5762, metalness: 0.9, roughness: 0.35 }),
+  bearing: new THREE.MeshStandardMaterial({ color: 0x3b4650, metalness: 0.6, roughness: 0.5 }),
+  amber: new THREE.MeshStandardMaterial({ color: 0xf0a43a, metalness: 0.2, roughness: 0.5 }),
+  motor: new THREE.MeshStandardMaterial({ color: 0x35607e, metalness: 0.4, roughness: 0.5 }),
+  table: new THREE.MeshStandardMaterial({ color: 0x48535e, metalness: 0.85, roughness: 0.42 }),
+  white: new THREE.MeshStandardMaterial({ color: 0xe9eef2, roughness: 0.6 }),
+  film: new THREE.MeshStandardMaterial({ color: 0xdfe8e4, metalness: 0, roughness: 0.2, transparent: true, opacity: 0.4, depthWrite: false, side: THREE.DoubleSide }),
+  seal: new THREE.MeshStandardMaterial({ map: hatch(), roughness: 0.5, transparent: true, opacity: 0.85, side: THREE.DoubleSide }),
+  edge: new THREE.LineBasicMaterial({ color: 0xe6f2ee, transparent: true, opacity: 0.6 }),
+  mark: new THREE.MeshStandardMaterial({ color: 0xf6f8f9, roughness: 0.9, metalness: 0 }),
+};
+
+/* ───────── utilidades geométricas ───────── */
+function box(w, h, d, mat, x = 0, y = 0, z = 0, parent = scene) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; parent.add(m); return m;
+}
+function cylX(r, len, mat, seg = 64, open = false) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, seg, 1, open), mat); m.rotation.z = Math.PI / 2; m.castShadow = m.receiveShadow = true; return m;
+}
+function toShape(pts) { const s = new THREE.Shape(); pts.forEach(([x, y], i) => i ? s.lineTo(x, y) : s.moveTo(x, y)); s.closePath(); return s; }
+function toPath(pts) { const p = new THREE.Path(); pts.forEach(([x, y], i) => i ? p.lineTo(x, y) : p.moveTo(x, y)); p.closePath(); return p; }
+function circ(r, n = 32, cx = 0, cy = 0) { return Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; }); }
+function rrect(w, h, r, seg = 6) {
+  const pts = [], cs = [[w / 2 - r, h / 2 - r, 0], [-w / 2 + r, h / 2 - r, Math.PI / 2], [-w / 2 + r, -h / 2 + r, Math.PI], [w / 2 - r, -h / 2 + r, 1.5 * Math.PI]];
+  for (const [cx, cy, a0] of cs) for (let i = 0; i <= seg; i++) { const a = a0 + i / seg * Math.PI / 2; pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
+  return pts;
+}
+/* Enrolla una geometría plana (X eje, Y tangencial, Z radial) sobre el tubo. φ = 0 es la generatriz inferior. */
+function wrap(geo, R0) {
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i), phi = y / R0, r = R0 + z;
+    p.setXYZ(i, x, -r * Math.cos(phi), -r * Math.sin(phi));
+  }
+  p.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere(); return geo;
+}
+const wrapPi = a => { a = (a + Math.PI) % (2 * Math.PI); if (a < 0) a += 2 * Math.PI; return a - Math.PI; };
+
+/* ───────── suelo ───────── */
+const yBase = yB - 1.9, floorY = yBase - 0.8;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.MeshStandardMaterial({ color: 0x10151a, roughness: 0.95 }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = floorY; floor.receiveShadow = true; scene.add(floor);
+const grid = new THREE.GridHelper(80, 80, 0x1f2830, 0x171e24); grid.position.y = floorY + 0.002; scene.add(grid);
+
+/* ───────── rodillos ───────── */
+const top = new THREE.Group(); top.position.y = yT; scene.add(top);
+const bot = new THREE.Group(); bot.position.y = yB; scene.add(bot);
+function tubeBody(g, coverPU) {
+  g.add(cylX(R_T, TUBE_L, M.tube, 128, true));
+  const inner = cylX(R_IN, TUBE_L, M.tubeEnd, 64, true); inner.material = M.tubeEnd; g.add(inner);
+  for (const sx of [-1, 1]) {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(R_IN, R_T, 96), M.tubeEnd);
+    ring.rotation.y = sx * Math.PI / 2; ring.position.x = sx * TUBE_L / 2; g.add(ring);
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(R_IN, 64), M.dark);
+    disc.rotation.y = sx * Math.PI / 2; disc.position.x = sx * (TUBE_L / 2 - 0.12); g.add(disc);
+    // marca de giro
+    const dot = box(0.01, 0.16, 0.5, M.white, sx * (TUBE_L / 2 - 0.115), -R_IN * 0.6, 0, g); dot.castShadow = false;
+  }
+  if (coverPU) g.add(cylX(R_PU, FACE, M.pu, 128));
+  const shaft = cylX(0.2, 2 * XP + 1.6, M.dark, 28); shaft.position.x = 0.05; g.add(shaft);
+  for (const sx of [-1, 1]) { const hub = cylX(0.27, 0.3, M.dark, 28); hub.position.x = sx * (TUBE_L / 2 - 0.25); g.add(hub); }
+}
+tubeBody(top, false);
+tubeBody(bot, true);
+
+/* malla de agujeros: 36 filas × 24 */
+{
+  const geo = new THREE.CircleGeometry(G.STUD_D / 2 * U, 14);
+  const inst = new THREE.InstancedMesh(geo, M.hole, G.ROWS * G.COLS);
+  const d = new THREE.Object3D(); let i = 0; const r = R_T + 0.0009;
+  for (let k = 0; k < G.ROWS; k++) for (let c = 0; c < G.COLS; c++) {
+    const phi = THREE.MathUtils.degToRad(k * G.ROW_DEG), x = APP.xCol(c) * U;
+    d.position.set(x, -r * Math.cos(phi), -r * Math.sin(phi));
+    d.lookAt(x, -2 * r * Math.cos(phi), -2 * r * Math.sin(phi));
+    d.updateMatrix(); inst.setMatrixAt(i++, d.matrix);
+  }
+  top.add(inst);
+}
+
+
+/* ───────── placas ───────── */
+const plateGroup = new THREE.Group(); top.add(plateGroup);
+const plateGeos = new Map();
+function plateGeo(h) {
+  const k = h + '|' + G.cleanText(S.text);
+  if (plateGeos.has(k)) return plateGeos.get(k);
+  const g = APP.geom(h, S.text);
+  const bev = { bevelEnabled: true, bevelSegments: 2, curveSegments: 10 };
+  const base = new THREE.ExtrudeGeometry(toShape(rrect(g.L * U, g.W * U, Math.min(5, g.W / 4) * U)), { ...bev, depth: G.PLATE_T * U - 0.004, bevelThickness: 0.002, bevelSize: 0.002 });
+  base.translate(0, 0, 0.002);
+  wrap(base, R_T);
+  const letterShapes = g.strokes.rects.map(q => toShape(q.map(([x, y]) => [x * U, y * U])));
+  const let3 = new THREE.ExtrudeGeometry(letterShapes, { ...bev, depth: G.RELIEF * U - 0.002, bevelThickness: 0.001, bevelSize: 0.0008, bevelSegments: 1 });
+  let3.translate(0, 0, G.PLATE_T * U - 0.001);
+  wrap(let3, R_T);
+  const mk = new THREE.ExtrudeGeometry(letterShapes, { depth: 0.0016, bevelEnabled: true, bevelThickness: 0.001, bevelSize: 0.0012, bevelSegments: 1, curveSegments: 4 });
+  mk.rotateX(-Math.PI / 2);   // forma (X, Y) → bolsa (x, −z): huella de contacto, legible desde la salida
+  const out = { g, base, let3, mk, hx: g.strokes.width / 2 * U, hz: g.strokes.height / 2 * U };
+  plateGeos.set(k, out); return out;
+}
+let plates = [];   // {pl, mesh, mat, bmat, alpha, xc, geo, prevW}
+function buildPlates() {
+  for (const p of plates) { plateGroup.remove(p.mesh); p.mat.dispose(); p.bmat.dispose(); }
+  if (plateGeos.size > 40) { for (const v of plateGeos.values()) { v.base.dispose(); v.let3.dispose(); } plateGeos.clear(); }
+  plates = [];
+  S.plates.forEach((pl, i) => {
+    const I = APP.plateInfo(pl), pg = plateGeo(pl.h);
+    const grp = new THREE.Group();
+    const bmat = M.ss.clone();
+    if (i === S.sel) { bmat.emissive = new THREE.Color(0x2f7fd0); bmat.emissiveIntensity = 0.55; }
+    const b = new THREE.Mesh(pg.base, bmat); b.castShadow = true; grp.add(b);
+    const mat = M.ssLet.clone();
+    const l = new THREE.Mesh(pg.let3, mat); l.castShadow = true; grp.add(l);
+    const alpha = THREE.MathUtils.degToRad(I.ang);
+    grp.rotation.x = alpha; grp.position.x = I.xc * U;
+    plateGroup.add(grp);
+    plates.push({ pl, mesh: grp, mat, bmat, alpha, xc: I.xc * U, geo: pg, prevW: wrapPi(theta + alpha) });
+  });
+}
+
+/* ───────── engranajes 1:1 ───────── */
+const rp = (yT - yB) / 2, GN = 94, gp = 2 * Math.PI / GN;
+function gearShape() {
+  const root = rp - 0.0375, tip = rp + 0.03, pts = [];
+  for (let k = 0; k < GN; k++) {
+    const a = k * gp;
+    for (const [f, r] of [[0, root], [.2, root], [.34, tip], [.56, tip], [.7, root]]) pts.push([r * Math.cos(a + f * gp), r * Math.sin(a + f * gp)]);
+  }
+  const s = toShape(pts);
+  s.holes.push(toPath(circ(0.2, 28)));
+  for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; s.holes.push(toPath(circ(rp * 0.17, 28, Math.cos(a) * rp * 0.55, Math.sin(a) * rp * 0.55))); }
+  return s;
+}
+const gGeo = new THREE.ExtrudeGeometry(gearShape(), { depth: 0.28, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.008, bevelSegments: 1, curveSegments: 6 });
+gGeo.translate(0, 0, -0.14); gGeo.rotateY(Math.PI / 2);
+const gearX = XP + PL_T + 0.42;
+const gTop = new THREE.Mesh(gGeo, M.dark); gTop.position.x = gearX; gTop.rotation.x = 1.5 * Math.PI - 0.45 * gp; gTop.castShadow = true; top.add(gTop);
+const gBot = new THREE.Mesh(gGeo, M.dark); gBot.position.x = gearX; gBot.rotation.x = 0.5 * Math.PI - 0.95 * gp; gBot.castShadow = true; bot.add(gBot);
+
+/* ───────── bastidor ───────── */
+const slot = 1.1, pw = 3.0, yS0 = yT - 0.8, yS1 = yT + 0.85, yokeH = 0.6;
+for (const sx of [-1, 1]) {
+  const x = sx * (XP + PL_T / 2);
+  box(PL_T, yS0 - yBase, pw, M.frame, x, (yS0 + yBase) / 2, 0);
+  for (const sz of [-1, 1]) box(PL_T, yS1 - yS0, (pw - slot) / 2, M.frame, x, (yS0 + yS1) / 2, sz * (slot / 2 + (pw - slot) / 4));
+  box(PL_T, yokeH, pw, M.frame, x, yS1 + yokeH / 2, 0);
+  // bloque deslizante del rodamiento superior
+  box(PL_T + 0.04, 0.9, slot - 0.02, M.bearing, x, yT, 0);
+  // rodamientos de brida UCF208 en la cara exterior
+  for (const y of [yT, yB]) {
+    const fx = sx * (XP + PL_T + 0.09);
+    box(0.18, 1.3, 1.3, M.bearing, fx, y, 0);
+    const hub = cylX(0.36, 0.32, M.bearing, 32); hub.position.set(sx * (XP + PL_T + 0.2), y, 0); scene.add(hub);
+  }
+  // husillo de presión y volante
+  const scr = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, yS1 + yokeH + 0.6 - (yT + 0.45), 18), M.dark);
+  scr.position.set(x, (yS1 + yokeH + 0.6 + yT + 0.45) / 2, 0); scene.add(scr);
+  const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.045, 12, 40), M.amber);
+  wheel.rotation.x = Math.PI / 2; wheel.position.set(x, yS1 + yokeH + 0.62, 0); wheel.castShadow = true; scene.add(wheel);
+}
+// base en tubo estructural 80×80
+for (const sz of [-1, 1]) box(2 * XP + 1.6, 0.8, 0.8, M.base, 0, yBase - 0.4, sz * 1.1);
+for (const sx of [-1, 1]) box(0.8, 0.8, 1.4, M.base, sx * (XP + 0.06), yBase - 0.4, 0);
+// motorreductor acoplado al eje superior
+{
+  const gx = -(XP + PL_T + 0.75);
+  box(0.6, 0.8, 0.8, M.motor, gx - 0.3, yT, 0);
+  const mot = cylX(0.32, 1.1, M.motor, 28); mot.rotation.set(0, 0, 0); mot.position.set(gx - 0.3, yT + 0.75, 0); scene.add(mot);
+  const fan = cylX(0.33, 0.12, M.dark, 28); fan.rotation.set(0, 0, 0); fan.position.set(gx - 0.3, yT + 1.36, 0); scene.add(fan);
+  box(0.6, yT - 0.4 - yBase, 0.7, M.frame, gx - 0.3, (yT - 0.4 + yBase) / 2, 0);
+}
+// mesas de entrada y salida
+const tableTop = FILM_Y - 0.004;
+const guides = [];
+for (const sz of [-1, 1]) {
+  const z0 = 0.8, z1 = 14, zc = sz * (z0 + z1) / 2, len = z1 - z0;
+  box(7.9, 0.04, len, M.table, 0, tableTop - 0.02, zc);
+  for (const sx of [-1, 1]) {
+    guides.push({ m: box(0.06, 0.07, len, M.frame, sx * 3.6, tableTop + 0.035, zc), sx });
+    box(0.12, tableTop - floorY, 0.12, M.frame, sx * 3.7, (tableTop + floorY) / 2, sz * 13);
+  }
+}
+function updateGuides() { for (const g of guides) g.m.position.x = g.sx * (S.bagW / 2 * U + 0.07); }
+
+
+/* ───────── bolsas tipo camiseta: fondo soldado adelante, asas atrás ───────── */
+const bagRoot = new THREE.Group(); scene.add(bagRoot);
+const bags = [];
+let bagGeo = null;
+function bagOutline(W, L) {
+  const hw = W / 2, hl = L / 2, cw = 0.3 * W, cd = G.HANDLE_FRAC * L, pts = [];
+  pts.push([-hw, hl], [hw, hl], [hw, -hl], [cw, -hl], [cw, -hl + cd - cw]);
+  for (let i = 1; i < 16; i++) { const a = -i / 16 * Math.PI; pts.push([cw * Math.cos(a), -hl + cd - cw - cw * Math.sin(a)]); }
+  pts.push([-cw, -hl + cd - cw], [-cw, -hl], [-hw, -hl]);
+  return pts;   // (x, z)
+}
+function buildBagGeo() {
+  if (bagGeo) { bagGeo.film.dispose(); bagGeo.line.dispose(); bagGeo.seal.dispose(); bagGeo.hline.dispose(); }
+  const W = S.bagW * U, L = S.bagL * U, out = bagOutline(W, L);
+  const film = new THREE.ShapeGeometry(toShape(out.map(([x, z]) => [x, -z])));
+  film.rotateX(-Math.PI / 2);
+  const line = new THREE.BufferGeometry().setFromPoints([...out, out[0]].map(([x, z]) => new THREE.Vector3(x, 0.001, z)));
+  const seal = new THREE.PlaneGeometry(W, G.SEAL * U); seal.rotateX(-Math.PI / 2);
+  const hz = L / 2 - S.hMark * U;
+  const hline = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-W / 2 + 0.05, 0.0015, hz), new THREE.Vector3(W / 2 - 0.05, 0.0015, hz)]);
+  bagGeo = { W, L, film, line, seal, hline, out };
+}
+const hMat = new THREE.LineDashedMaterial({ color: 0xf0a43a, dashSize: 0.12, gapSize: 0.08, transparent: true, opacity: 0.75 });
+function spawnBagAt(zc) {
+  const g = new THREE.Group();
+  const f = new THREE.Mesh(bagGeo.film, M.film); f.receiveShadow = true; g.add(f);
+  g.add(new THREE.Line(bagGeo.line, M.edge));
+  const sl = new THREE.Mesh(bagGeo.seal, M.seal); sl.position.set(0, 0.0012, bagGeo.L / 2 - G.SEAL * U / 2); g.add(sl);
+  if (S.mode === 'reg') { const hl = new THREE.Line(bagGeo.hline, hMat); hl.computeLineDistances(); g.add(hl); }
+  const b = { g, W: bagGeo.W, L: bagGeo.L, z: zc, marks: [] };
+  g.position.set(0, FILM_Y, b.z); bagRoot.add(g); bags.push(b);
+}
+function disposeBag(b) { bagRoot.remove(b.g); for (const m of b.marks) if (m.material !== M.mark) m.material.dispose(); }
+let reg = null, regNext = 0;
+function regSetup() {
+  const R = APP.regFor();
+  reg = { P: R.k * G.MARK_ARC * U, L: S.bagL * U, h: S.hMark * U, R };
+}
+function maintainBags() {
+  while (bags.length && bags[0].z - bags[0].L / 2 > LINE1) disposeBag(bags.shift());
+  if (S.mode === 'reg') {
+    // la bolsa i llega con su altura de marca al nip cuando la línea ha avanzado i·P
+    const iMax = Math.floor((reg.h + travel - LINE0) / reg.P);
+    while (regNext <= iMax) { spawnBagAt(reg.h - reg.L / 2 + travel - regNext * reg.P); regNext++; }
+    return;
+  }
+  let last = bags[bags.length - 1];
+  while (!last || last.z - last.L / 2 > LINE0) {
+    const front = last ? last.z - last.L / 2 - GAP : LINE0 + 0.5;
+    spawnBagAt(front - bagGeo.L / 2); last = bags[bags.length - 1];
+  }
+}
+function clearBags() { for (const b of bags) disposeBag(b); bags.length = 0; fresh.length = 0; }
+
+/* ───────── simulación por distancia de superficie ───────── */
+let theta = 0, travel = 0, stamped = 0;
+const fresh = [];
+function markFits(b, x, z, hx, hz) {
+  const hw = b.W / 2, hl = b.L / 2, cw = 0.3 * b.W, cd = G.HANDLE_FRAC * b.L;
+  if (Math.abs(x) + hx > hw - 0.04) return false;
+  if (z + hz > hl - G.SEAL * U - 0.02) return false;
+  const inCut = Math.abs(x) - hx < cw;
+  return z - hz >= -hl + (inCut ? cd : 0.04);
+}
+function stamp(p, z, animate) {
+  for (const b of bags) {
+    const lz = z - b.z;
+    if (Math.abs(lz) > b.L / 2) continue;
+    if (!markFits(b, p.xc, lz, p.geo.hx, p.geo.hz)) return false;
+    const mat = animate ? M.mark.clone() : M.mark;
+    if (animate) { mat.emissive = new THREE.Color(0xf0a43a); mat.emissiveIntensity = 1.2; }
+    const m = new THREE.Mesh(p.geo.mk, mat);
+    m.position.set(p.xc, 0.0014, lz);
+    m.userData = { hx: p.geo.hx, hz: p.geo.hz };
+    b.g.add(m); b.marks.push(m);
+    if (animate) fresh.push({ m, t0: travel });
+    stamped++;
+    return true;
+  }
+  return false;
+}
+function step(ds, animate) {
+  theta -= ds / R_REL; travel += ds;
+  for (const b of bags) { b.z += ds; b.g.position.z = b.z; }
+  maintainBags();
+  for (const p of plates) {
+    const w = wrapPi(theta + p.alpha);
+    if (p.prevW > 0 && w <= 0 && p.prevW < 1.5) stamp(p, -w * R_REL, animate);
+    p.prevW = w;
+  }
+}
+function prewarm() {
+  clearBags();
+  regSetup();
+  regNext = Math.ceil((reg.h + travel - LINE0) / reg.P);
+  maintainBags();
+  for (const p of plates) p.prevW = wrapPi(theta + p.alpha);
+  const dist = LINE1 - LINE0 + 1, n = Math.ceil(dist / 0.04);
+  for (let i = 0; i < n; i++) step(dist / n, false);
+}
+
+/* ───────── etiquetas ───────── */
+const tagsEl = $('tags');
+const TAGS = [
+  { text: 'Rodillo grabador · tubo NPS 10 Sch 40', p: [-2.2, yT + R_T + 0.12, -0.5] },
+  { text: 'Placas de marcado · AISI 304', p: [0, yT + R_REL * 0.15, -R_REL - 0.05], hot: true },
+  { text: 'Rodillo de presión · PU 85 A', p: [-2.4, yB + 0.1, -R_PU - 0.02] },
+  { text: 'Engranajes 1:1 · m 3', p: [gearX, yT + rp * 0.95, -0.4] },
+  { text: 'Husillo de presión', p: [XP + PL_T / 2, yS1 + yokeH + 0.72, 0] },
+  { text: 'Motorreductor', p: [-(XP + PL_T + 1.05), yT + 1.45, 0] },
+  { text: 'Entrada · bolsa lisa', p: [0.6, 0.03, -9] },
+  { text: 'Salida · bolsa marcada', p: [0.6, 0.03, 8] },
+].map(t => { const el = document.createElement('div'); el.className = 'tag' + (t.hot ? ' hot' : ''); el.textContent = t.text; tagsEl.append(el); return { ...t, v: new THREE.Vector3(...t.p), el }; });
+function updateTags(w, h) {
+  if (!S.tags) return;
+  const v = new THREE.Vector3();
+  for (const t of TAGS) {
+    v.copy(t.v).project(camera);
+    const vis = v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05;
+    t.el.style.display = vis ? '' : 'none';
+    if (vis) t.el.style.transform = `translate(${((v.x + 1) / 2 * w).toFixed(1)}px, ${((1 - v.y) / 2 * h).toFixed(1)}px) translate(-50%, calc(-100% - 8px))`;
+  }
+}
+
+/* ───────── cámara ───────── */
+const VIEWS = {
+  general: { pos: [13.5, 8.6, 17.5], tgt: [0.3, -0.8, 1.6] },
+  nip:     { pos: [4.2, 0.75, 5.0], tgt: [0.6, 0.05, 0.2] },
+  plates:  { pos: [2.6, 5.0, -7.2], tgt: [0, yT - 0.2, 0] },
+  out:     { pos: [0.2, 12.5, 15.5], tgt: [0, 0, 6.5] },
+  drive:   { pos: [13, 2.4, 6], tgt: [XP, 0, 0] },
+};
+let tween = null;
+function goView(name, instant) {
+  const v = VIEWS[name];
+  document.querySelectorAll('#views .btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === name)));
+  if (instant) { camera.position.set(...v.pos); controls.target.set(...v.tgt); controls.update(); return; }
+  const p1 = new THREE.Vector3(...v.pos);
+  tween = { t: 0, p0: camera.position.clone(), t0: controls.target.clone(), p1, t1: new THREE.Vector3(...v.tgt), lift: Math.min(6, camera.position.distanceTo(p1) * 0.35) };
+}
+controls.addEventListener('start', () => { tween = null; document.querySelectorAll('#views .btn').forEach(b => b.setAttribute('aria-pressed', 'false')); });
+
+/* ───────── panel inferior: malla desarrollada (editor) + salida ───────── */
+const dg = $('dg'), dctx = dg.getContext('2d');
+dg.tabIndex = 0;
+const COL = { fg: css('--fg'), muted: css('--muted'), line: css('--line-strong'), accent: css('--accent'), steel: css('--steel'), warn: css('--warn'), ok: css('--ok') };
+let hover = null, drag = null;
+function devLayout() {
+  const cw = dg.clientWidth, ch = dg.clientHeight, padL = 58, padR = 10;
+  const iw = cw - padL - padR;
+  return { cw, ch, padL, iw, cell: iw / G.ROWS, yA: 22, hA: 150, yB: 206, hB: 56 };
+}
+function hitTest(ev) {
+  const r = dg.getBoundingClientRect(), L = devLayout();
+  const x = ev.clientX - r.left, y = ev.clientY - r.top;
+  if (y < L.yA - 4 || y > L.yA + L.hA + 4 || x < L.padL || x > L.padL + L.iw) return null;
+  const row = Math.max(0, Math.min(G.ROWS - 1, Math.floor((x - L.padL) / L.cell)));
+  const xmm = ((y - L.yA) / L.hA - 0.5) * G.FACE;
+  return { row, xmm };
+}
+function plateAtCell(row, xmm) {
+  return S.plates.findIndex(pl => {
+    const I = APP.plateInfo(pl);
+    return APP.rowDist(pl.row, row) * G.ROW_ARC <= I.g.W / 2 + 2 && Math.abs(I.xc - xmm) <= I.g.L / 2;
+  });
+}
+let msgT = 0;
+function flashMsg(t) { if (!t) return; const m = $('devMsg'); m.textContent = t; m.classList.add('show'); clearTimeout(msgT); msgT = setTimeout(() => m.classList.remove('show'), 2800); }
+dg.addEventListener('pointerdown', e => {
+  const h = hitTest(e); if (!h) return;
+  dg.focus({ preventScroll: true });
+  const i = plateAtCell(h.row, h.xmm);
+  if (i >= 0) {
+    const I = APP.plateInfo(S.plates[i]);
+    drag = { i, dRow: S.plates[i].row - h.row, dx: I.xc - h.xmm, moved: false, cand: null };
+    dg.setPointerCapture(e.pointerId);
+    if (S.sel !== i) APP.set({ sel: i }, 'dev');
+  } else {
+    const cand = APP.placeAt(h.row, h.xmm, S.h), err = APP.tryAdd(cand);
+    if (err) { flashMsg(err); return; }
+    APP.set({ plates: [...S.plates, cand], sel: S.plates.length }, 'dev');
+  }
+});
+dg.addEventListener('pointermove', e => {
+  hover = hitTest(e);
+  if (!drag || !hover) return;
+  const pl = S.plates[drag.i];
+  const cand = APP.placeAt(hover.row + drag.dRow, hover.xmm + drag.dx, pl.h);
+  if (cand && (cand.row !== pl.row || cand.c0 !== pl.c0)) { drag.moved = true; drag.cand = cand; drag.err = APP.check(cand, S.plates, drag.i); }
+  else if (cand) { drag.cand = null; }
+});
+dg.addEventListener('pointerup', () => {
+  if (drag && drag.cand) {
+    if (drag.err) flashMsg(drag.err);
+    else { const list = S.plates.slice(); list[drag.i] = drag.cand; APP.set({ plates: list }, 'dev'); }
+  }
+  drag = null;
+});
+dg.addEventListener('pointerleave', () => { hover = null; });
+document.addEventListener('keydown', e => {
+  if ($('sim').hidden) return;
+  const t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
+  const map = { ArrowLeft: [0, -1], ArrowRight: [0, 1], ArrowUp: [-1, 0], ArrowDown: [1, 0] };
+  if (map[e.key] && S.sel != null) { e.preventDefault(); flashMsg(APP.moveSel(...map[e.key])); }
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && S.sel != null) { e.preventDefault(); APP.removeSel(); }
+  else if (e.key === 'Escape') APP.set({ sel: null }, 'ui');
+});
+function drawDev() {
+  const L = devLayout(); if (!L.cw) return;
+  const dpr = Math.min(devicePixelRatio, 2);
+  if (dg.width !== Math.round(L.cw * dpr) || dg.height !== Math.round(L.ch * dpr)) { dg.width = Math.round(L.cw * dpr); dg.height = Math.round(L.ch * dpr); }
+  const c = dctx; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, L.cw, L.ch);
+  const kx = L.iw / G.TUBE.C, ky = L.hA / G.FACE;
+  const Y = xmm => L.yA + (xmm / G.FACE + 0.5) * L.hA;
+  c.font = '500 10px "IBM Plex Mono", monospace';
+  c.fillStyle = COL.muted;
+  c.fillText(`MALLA DEL RODILLO DESARROLLADA · 36 FILAS A 10° × ${G.COLS} AGUJEROS M6 CADA 25 mm`, L.padL, L.yA - 8);
+  // ancho de bolsa
+  const yb0 = Y(-S.bagW / 2), yb1 = Y(S.bagW / 2);
+  c.fillStyle = 'rgba(223,232,228,.07)'; c.fillRect(L.padL, yb0, L.iw, yb1 - yb0);
+  c.strokeStyle = 'rgba(223,232,228,.3)'; c.setLineDash([4, 4]);
+  for (const y of [yb0, yb1]) { c.beginPath(); c.moveTo(L.padL, y + .5); c.lineTo(L.padL + L.iw, y + .5); c.stroke(); }
+  c.setLineDash([]);
+  c.fillStyle = COL.muted; c.textAlign = 'right';
+  c.fillText('bolsa', L.padL - 6, (yb0 + yb1) / 2 - 2); c.fillText(`${S.bagW} mm`, L.padL - 6, (yb0 + yb1) / 2 + 10);
+  c.fillText('−400', L.padL - 6, L.yA + 8); c.fillText('+400', L.padL - 6, L.yA + L.hA);
+  c.textAlign = 'left';
+  // filas requeridas por el registro
+  if (S.mode === 'reg' && reg) {
+    c.fillStyle = 'rgba(240,164,58,.07)';
+    for (let r = 0; r < G.ROWS; r += reg.R.g) c.fillRect(L.padL + r * L.cell, L.yA, L.cell, L.hA);
+  }
+  // agujeros
+  c.fillStyle = 'rgba(160,175,190,.5)';
+  for (let k = 0; k < G.ROWS; k++) for (let j = 0; j < G.COLS; j++) c.fillRect(L.padL + (k + 0.5) * L.cell - 1, Y(APP.xCol(j)) - 1, 2, 2);
+  c.strokeStyle = COL.line; c.strokeRect(L.padL + .5, L.yA + .5, L.iw - 1, L.hA - 1);
+  c.fillStyle = COL.muted;
+  for (let a = 0; a <= 360; a += 30) {
+    const x = L.padL + a / 10 * L.cell; c.fillRect(x, L.yA + L.hA, 1, a % 90 ? 3 : 5);
+    if (a % 90 === 0) { const t = a + '°'; c.fillText(t, Math.min(L.padL + L.iw - c.measureText(t).width, Math.max(L.padL, x - c.measureText(t).width / 2)), L.yA + L.hA + 15); }
+  }
+  // placas
+  const drawPlate = (pl, fill, stroke, lw = 1) => {
+    const I = APP.plateInfo(pl);
+    const cx = L.padL + (pl.row + 0.5) * L.cell, w = I.g.W * kx, h = I.g.L * ky, cy = Y(I.xc);
+    const one = x0 => { c.fillStyle = fill; c.fillRect(x0 - w / 2, cy - h / 2, w, h); c.strokeStyle = stroke; c.lineWidth = lw; c.strokeRect(x0 - w / 2 + lw / 2, cy - h / 2 + lw / 2, w - lw, h - lw); };
+    one(cx); if (cx + w / 2 > L.padL + L.iw) one(cx - L.iw); if (cx - w / 2 < L.padL) one(cx + L.iw);
+    if (h > 11) { c.save(); c.translate(cx, cy); c.rotate(-Math.PI / 2); c.fillStyle = 'rgba(27,18,4,.85)'; c.font = '600 9px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.fillText(G.sizeLabel(pl.h), 0, 3); c.restore(); }
+  };
+  c.save(); c.beginPath(); c.rect(L.padL, L.yA, L.iw, L.hA); c.clip();
+  S.plates.forEach((pl, i) => drawPlate(pl, i === S.sel ? '#ffc56b' : COL.accent, i === S.sel ? COL.steel : '#7a4d10', i === S.sel ? 2 : 1));
+  if (drag && drag.cand) drawPlate(drag.cand, drag.err ? 'rgba(255,132,102,.45)' : 'rgba(92,194,138,.45)', drag.err ? COL.warn : COL.ok);
+  else if (hover && !drag && plateAtCell(hover.row, hover.xmm) < 0) {
+    const cand = APP.placeAt(hover.row, hover.xmm, S.h);
+    if (cand) { const bad = APP.tryAdd(cand); drawPlate(cand, bad ? 'rgba(255,132,102,.3)' : 'rgba(92,194,138,.3)', bad ? COL.warn : COL.ok); }
+  }
+  c.restore();
+  // cursor del nip
+  const nipDeg = ((((-theta) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) * 180 / Math.PI;
+  let xn = L.padL + (nipDeg / 10 + 0.5) * L.cell; if (xn > L.padL + L.iw) xn -= L.iw;
+  c.strokeStyle = COL.accent; c.lineWidth = 2; c.beginPath(); c.moveTo(xn, L.yA - 3); c.lineTo(xn, L.yA + L.hA + 3); c.stroke(); c.lineWidth = 1;
+
+  // salida: una vuelta de película
+  const kxB = L.iw / G.FILM_REV, YB = xmm => L.yB + (xmm / G.FACE + 0.5) * L.hB;
+  c.fillStyle = COL.muted; c.fillText(`SALIDA · ${fmt(G.FILM_REV, 1)} mm DE PELÍCULA = UNA VUELTA DEL RODILLO →`, L.padL, L.yB - 8);
+  c.save(); c.beginPath(); c.rect(L.padL, L.yB, L.iw, L.hB); c.clip();
+  c.fillStyle = 'rgba(160,175,190,.05)'; c.fillRect(L.padL, L.yB, L.iw, L.hB);
+  for (const b of bags) {
+    const x0 = L.padL + (b.z - b.L / 2) / U * kxB, x1 = L.padL + (b.z + b.L / 2) / U * kxB;
+    if (x1 < L.padL - 5 || x0 > L.padL + L.iw + 5) continue;
+    c.beginPath();
+    bagGeo.out.forEach(([x, z], i) => { const px = L.padL + (b.z + z) / U * kxB, py = YB(x / U); i ? c.lineTo(px, py) : c.moveTo(px, py); });
+    c.closePath(); c.fillStyle = 'rgba(223,232,228,.14)'; c.fill(); c.strokeStyle = 'rgba(223,232,228,.4)'; c.stroke();
+    if (S.mode === 'reg') {
+      const xh = L.padL + (b.z + b.L / 2 - S.hMark * U) / U * kxB;
+      c.strokeStyle = 'rgba(240,164,58,.7)'; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(xh, YB(-b.W / 2 / U)); c.lineTo(xh, YB(b.W / 2 / U)); c.stroke(); c.setLineDash([]);
+    }
+    c.fillStyle = COL.fg;
+    for (const m of b.marks) {
+      const px = L.padL + (b.z + m.position.z) / U * kxB, py = YB(m.position.x / U);
+      const hw = Math.max(1.5, m.userData.hz / U * kxB), hh = Math.max(1.5, m.userData.hx / U * (L.hB / G.FACE));
+      c.fillRect(px - hw, py - hh, 2 * hw, 2 * hh);
+    }
+  }
+  c.restore();
+  c.strokeStyle = COL.line; c.strokeRect(L.padL + .5, L.yB + .5, L.iw - 1, L.hB - 1);
+  c.fillStyle = COL.accent; c.fillRect(L.padL - 1, L.yB, 2, L.hB);
+  c.fillStyle = COL.muted; c.textAlign = 'right'; c.fillText('nip', L.padL - 6, L.yB + L.hB / 2 + 3); c.textAlign = 'left';
+}
+
+/* ───────── UI ───────── */
+const bagSel = $('bagSel');
+for (const b of G.BAGS) bagSel.insertAdjacentHTML('beforeend', `<option value="${b.id}">${b.name} · ${b.w / 10} × ${b.l / 10} cm</option>`);
+bagSel.insertAdjacentHTML('beforeend', '<option value="c">Personalizada</option>');
+const press = (sel, fn) => document.querySelectorAll(sel).forEach(b => b.setAttribute('aria-pressed', String(fn(b))));
+function syncUI() {
+  const r = APP.calc(), chk = APP.checkLayout(), sp = APP.selPlate();
+  const hShown = sp ? sp.h : S.h, g = APP.geom(hShown, S.text);
+  bagSel.value = S.bagId;
+  $('bagName').textContent = S.bagId === 'c' ? 'Personalizada' : G.BAGS.find(b => b.id === S.bagId).name;
+  $('bagW').value = S.bagW; $('bagL').value = S.bagL; $('speed').value = S.speed;
+  $('oBagW').textContent = `${S.bagW} mm`; $('oBagL').textContent = `${S.bagL} mm`; $('oSpeed').textContent = `${S.speed} m/min`;
+  $('hMark').max = Math.round(S.bagL * (1 - G.HANDLE_FRAC)); $('hMark').value = S.hMark; $('oHMark').textContent = `${S.hMark} mm`;
+  $('hMarkField').hidden = S.mode !== 'reg';
+  press('[data-mode]', b => b.dataset.mode === S.mode);
+  press('[data-lanes]', b => +b.dataset.lanes === S.lanes);
+  press('[data-h]', b => +b.dataset.h === hShown);
+  press('[data-ts]', b => +b.dataset.ts === S.ts);
+  $('oLanes').textContent = S.lanes;
+  { const o = APP.revOptions(), list = o.list, n = S.nRev, nr = $('nRev');
+    nr.min = list[0]; nr.max = list[list.length - 1]; nr.step = list.length > 1 ? list[1] - list[0] : 1; nr.value = n; nr.disabled = list.length < 2;
+    $('oRev').textContent = `${n} · cada ${fmt(360 / n, 360 % n ? 1 : 0)}°`;
+    const exact = G.ROWS % n === 0 ? '' : ' Como la malla va cada 10°, las placas quedan en el agujero más cercano al reparto exacto (±5°).';
+    $('revInfo').innerHTML = S.mode === 'reg'
+      ? `<b>${n / o.P}</b> logo${n / o.P > 1 ? 's' : ''} por bolsa, separados ${fmt(G.ROWS / n * G.MARK_ARC)} mm en vertical. Mínimo ${o.P} por vuelta (uno por bolsa); máximo ${list[list.length - 1]} con letra de ${S.h} mm.${exact}`
+      : `Un logo cada ${fmt(G.ROWS / n * G.MARK_ARC)} mm de película. Mínimo para garantizar marca en esta bolsa: <b>${o.nMin || '–'}</b>; máximo con letra de ${S.h} mm: <b>${o.max}</b>.${exact}`;
+    const xm = APP.xOffMax(), xo = $('xOff');
+    xo.min = -xm; xo.max = xm; xo.value = Math.max(-xm, Math.min(xm, S.xOff)); xo.disabled = xm === 0;
+    $('oXOff').textContent = xm === 0 ? 'sin espacio' : `${S.xOff > 0 ? '+' : ''}${S.xOff} mm · máx. ±${xm}`;
+  }
+  if (document.activeElement !== $('text')) $('text').value = G.cleanText(S.text);
+  $('hLetter').value = hShown; $('oH').textContent = `${hShown} mm`;
+  $('hLabel').textContent = sp ? 'Alto de letra · placa seleccionada' : 'Alto de letra · todas las placas';
+  $('plateDims').textContent = `${g.L} × ${g.W} mm`;
+  $('plateRead').innerHTML = `Relieve <b>${fmt(G.RELIEF, 1)} mm</b> · 2 espárragos M6 a <b>${g.studSp} mm</b><br>Arco ${fmt(g.arcDeg, 1)}° · flecha ${fmt(g.sag, 2)} mm · ocupa ${g.minRows} fila${g.minRows > 1 ? 's' : ''} (${g.minRows * 10}°)`;
+  // modo
+  const R = APP.regFor();
+  if (S.mode === 'reg') {
+    $('modeRead').textContent = `${fmt(R.perRev, 2)} bolsas por vuelta`;
+    $('modeInfo').innerHTML = `Una bolsa cada <b>${R.k} filas</b> (${fmt(R.pitch)} mm de línea) · separación entre bolsas <b>${fmt(R.gap)} mm</b><br>Hacen falta placas en ${R.plates} fila${R.plates > 1 ? 's' : ''} por carril: cada ${R.g * 10}° alrededor del rodillo.`;
+  } else {
+    const k = APP.contStep(APP.geom(S.h, S.text));
+    $('modeRead').textContent = 'sin sincronizar';
+    $('modeInfo').innerHTML = k ? `Placas cada <b>${k} filas</b> (${fmt(k * G.MARK_ARC)} mm de película). La marca cae a una altura distinta en cada bolsa, pero siempre hay al menos una completa.` : 'La bolsa es demasiado corta para garantizar una marca con esta placa.';
+  }
+  $('layoutRead').textContent = `${S.plates.length} placa${S.plates.length === 1 ? '' : 's'}`;
+  $('layoutRule').innerHTML = S.mode === 'reg'
+    ? (chk.missing && chk.missing.length ? `Faltan placas en las filas <b>${chk.missing.map(x => x * 10 + '°').join(', ')}</b>.` : `Todas las filas de registro tienen placa.`) + ` Logos a <b>${chk.heights ? [...new Set(chk.heights.map(o => Math.round(o.hc)))].sort((a, b) => a - b).join(', ') : '–'} mm</b> del fondo.`
+    : (chk.maxGap == null ? 'Sin placas dentro del ancho de la bolsa.' : `Mayor separación entre placas <b>${fmt(chk.maxGap)} mm</b> · admisible <b>${fmt(chk.need)} mm</b>`);
+  // selección
+  $('selGroup').dataset.empty = String(!sp);
+  if (sp) {
+    const I = APP.plateInfo(sp);
+    $('selRead').textContent = `${G.sizeLabel(sp.h) === String(sp.h) ? sp.h + ' mm' : G.sizeLabel(sp.h)} · ${I.g.L} × ${I.g.W}`;
+    $('selInfo').innerHTML = `Fila <b>${sp.row}</b> (${sp.row * 10}°) · centro a <b>${fmt(I.xc, 1)} mm</b> del centro de la cara · espárragos en agujeros ${sp.c0 + 1} y ${sp.c0 + 1 + I.g.span}${S.mode === 'reg' ? ` · marca a <b>${fmt(S.hMark + (sp.row % R.g) * G.MARK_ARC)} mm</b> del fondo` : ''}`;
+  } else { $('selRead').textContent = 'ninguna'; $('selInfo').innerHTML = 'Haz clic en una placa de la malla inferior para seleccionarla, o en un hueco para montar una nueva. Arrástrala para moverla.'; }
+  $('run').textContent = S.running ? 'Pausar' : 'Poner en marcha';
+  $('stPlates').textContent = S.plates.length;
+  const pitch = S.mode === 'reg' ? R.pitch : S.bagL + GAP / U;
+  $('stRate').innerHTML = `${fmt(S.speed * 1000 / pitch)} <small>bolsas/min</small>`;
+  $('stForce').innerHTML = `${fmt(r.Fnip / 1000, 1)} <small>kN diseño</small>`;
+  const st = $('stStatus');
+  st.className = 'chip ' + (chk.ok ? 'ok' : 'bad');
+  st.textContent = chk.ok ? (S.mode === 'reg' ? `Marca a ${S.hMark} mm del fondo en cada bolsa` : 'Cada bolsa lleva al menos una marca') : 'Hay bolsas que pueden salir sin marca';
+  const notes = [];
+  if (S.mode === 'reg' && chk.missing && chk.missing.length) notes.push(['warn', `Con registro, la bolsa que llega cuando el rodillo está en ${chk.missing.map(x => x * 10 + '°').join(', ')} no encuentra placa. Usa “Distribuir para esta bolsa”.`]);
+  if (S.mode === 'reg' && chk.badHeights && chk.badHeights.length) notes.push(['warn', `${chk.badHeights.length} marca${chk.badHeights.length > 1 ? 's quedan' : ' queda'} sobre la soldadura o en la zona de asas. Baja la altura o quita logos en vertical.`]);
+  if (S.mode === 'cont' && !chk.ok && chk.maxGap != null) notes.push(['warn', `La mayor separación entre placas (${fmt(chk.maxGap)} mm) supera lo que admite la bolsa (${fmt(chk.need)} mm).`]);
+  if (chk.outBag.length) notes.push(['warn', `${chk.outBag.length} placa${chk.outBag.length > 1 ? 's quedan' : ' queda'} fuera del ancho de la bolsa y no marca${chk.outBag.length > 1 ? 'n' : ''}.`]);
+  if (r.nSimFromLayout) notes.push(['info', `Hay ${chk.maxPerRowAll} placas en una misma fila; el informe calcula las cargas con ese número.`]);
+  if (S.mode === 'reg' && R.k > 36) notes.push(['info', `La bolsa es más larga que una vuelta (${fmt(G.FILM_REV)} mm): con registro sale una bolsa cada ${fmt(R.k / 36, 2)} vueltas. Un servomotor con registro permitiría reducir la separación.`]);
+  if (!S.plates.length) notes.push(['info', 'No hay placas montadas. Haz clic en la malla inferior o usa “Distribuir para esta bolsa”.']);
+  $('notes').innerHTML = notes.map(([k, t]) => `<div class="note ${k}">${t}</div>`).join('');
+}
+function liveStats() {
+  let lo = Infinity, hi = -Infinity;
+  for (const b of bags) if (b.z - b.L / 2 > 0.3) { lo = Math.min(lo, b.marks.length); hi = Math.max(hi, b.marks.length); }
+  $('stPerBag').textContent = lo === Infinity ? '–' : (lo === hi ? String(lo) : `${lo}–${hi}`);
+}
+const redistribute = (resetN) => {
+  const xm = APP.xOffMax();
+  APP.s.nRev = resetN === true ? APP.recRev() : APP.snapRev(S.nRev);
+  APP.s.xOff = Math.max(-xm, Math.min(xm, S.xOff));
+  const r = APP.autoLayout(); if (r.info && r.info.err) flashMsg(r.info.err);
+  APP.set({ plates: r.plates, sel: null }, 'ui');
+};
+const resetLayout = () => redistribute(true);
+bagSel.addEventListener('change', () => {
+  const b = G.BAGS.find(x => x.id === bagSel.value);
+  APP.set(b ? { bagId: b.id, bagW: b.w, bagL: b.l } : { bagId: 'c' }, 'ui'); if (b) resetLayout();
+});
+$('bagW').addEventListener('input', e => APP.set({ bagId: 'c', bagW: +e.target.value }, 'ui'));
+$('bagL').addEventListener('input', e => APP.set({ bagId: 'c', bagL: +e.target.value }, 'ui'));
+$('bagW').addEventListener('change', () => redistribute()); $('bagL').addEventListener('change', resetLayout);
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { APP.set({ mode: b.dataset.mode }, 'ui'); resetLayout(); }));
+$('hMark').addEventListener('input', e => APP.set({ hMark: +e.target.value }, 'ui'));
+$('hStd').addEventListener('click', () => APP.set({ hMark: G.hStd(S.bagL) }, 'ui'));
+$('text').addEventListener('input', e => { const v = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 10); e.target.value = v; if (v) { APP.set({ text: v }, 'ui'); } });
+$('text').addEventListener('change', () => redistribute());
+function setH(h) {
+  if (S.sel != null) { const err = APP.resizeSel(h); if (err) flashMsg(err); else APP.set({ h }, 'ui'); }
+  else { APP.set({ h }, 'ui'); redistribute(); }
+}
+$('hLetter').addEventListener('input', e => setH(+e.target.value));
+document.querySelectorAll('[data-h]').forEach(b => b.addEventListener('click', () => setH(+b.dataset.h)));
+document.querySelectorAll('[data-lanes]').forEach(b => b.addEventListener('click', () => { APP.set({ lanes: +b.dataset.lanes }, 'ui'); redistribute(); }));
+$('nRev').addEventListener('input', e => { APP.s.nRev = APP.snapRev(+e.target.value); redistribute(); });
+$('xOff').addEventListener('input', e => { APP.s.xOff = +e.target.value; redistribute(); });
+$('xLeft').addEventListener('click', () => { APP.s.xOff -= G.AX_PITCH; redistribute(); });
+$('xRight').addEventListener('click', () => { APP.s.xOff += G.AX_PITCH; redistribute(); });
+$('xCenter').addEventListener('click', () => { APP.s.xOff = 0; redistribute(); });
+document.querySelectorAll('[data-move]').forEach(b => b.addEventListener('click', () => { const [dr, dc] = b.dataset.move.split(',').map(Number); flashMsg(APP.moveSel(dr, dc)); }));
+$('dupUp').addEventListener('click', () => flashMsg(APP.dupSel('up')));
+$('dupSide').addEventListener('click', () => flashMsg(APP.dupSel('side')));
+$('delSel').addEventListener('click', () => APP.removeSel());
+$('auto').addEventListener('click', () => { APP.s.xOff = 0; resetLayout(); });
+$('clear').addEventListener('click', () => APP.set({ plates: [], sel: null }, 'ui'));
+$('speed').addEventListener('input', e => APP.set({ speed: +e.target.value }, 'ui'));
+document.querySelectorAll('[data-ts]').forEach(b => b.addEventListener('click', () => APP.set({ ts: +b.dataset.ts }, 'ui')));
+$('run').addEventListener('click', () => APP.set({ running: !S.running }, 'ui'));
+$('reset').addEventListener('click', () => { stamped = 0; prewarmed = false; rebuild.bags = true; });
+$('views').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) goView(b.dataset.view); });
+$('tagsBtn').addEventListener('click', () => { APP.set({ tags: !S.tags }, 'ui'); tagsEl.classList.toggle('off', !S.tags); $('tagsBtn').setAttribute('aria-pressed', String(S.tags)); });
+const ctrlEl = $('controls'), toggle = $('drawerToggle');
+toggle.addEventListener('click', () => { const open = !ctrlEl.classList.contains('open'); ctrlEl.classList.toggle('open', open); toggle.setAttribute('aria-expanded', String(open)); toggle.textContent = open ? 'Cerrar' : 'Ajustes'; });
+const mq = matchMedia('(max-width: 860px)'), devEl = $('dev');
+function placeDev() { if (mq.matches) ctrlEl.prepend(devEl); else $('sim').insertBefore(devEl, ctrlEl); }
+mq.addEventListener('change', placeDev); placeDev();
+
+let rebuild = { plates: true, bags: true }, prewarmed = false;
+APP.on(patch => {
+  if ('plates' in patch || 'text' in patch || 'nipB' in patch || 'sel' in patch) rebuild.plates = true;
+  if ('bagW' in patch || 'bagL' in patch || 'text' in patch || 'mode' in patch || 'hMark' in patch || 'h' in patch) rebuild.bags = true;
+  if ('plates' in patch && !('sel' in patch && Object.keys(patch).length === 1)) rebuild.bags = true;
+  syncUI();
+});
+
+/* ───────── bucle ───────── */
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / Math.max(h, 1);
+  if (w > 860) camera.setViewOffset(w, h, 0, 120, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+  VIEWS.general.pos = w < 860 ? [16, 11, 21] : [13.5, 8.6, 17.5];
+}
+new ResizeObserver(resize).observe(canvas); resize();
+goView('general', true);
+syncUI();
+const clock = new THREE.Clock();
+let statT = 0;
+function frame() {
+  requestAnimationFrame(frame);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if ($('sim').hidden) return;
+  if (rebuild.plates || rebuild.bags) {
+    const onlySel = rebuild.plates && !rebuild.bags;
+    buildPlates();
+    if (rebuild.bags) { buildBagGeo(); updateGuides(); prewarm(); liveStats(); }
+    else if (onlySel) { for (const p of plates) p.prevW = wrapPi(theta + p.alpha); }
+    rebuild = { plates: false, bags: false };
+  }
+  if (S.running) {
+    const ds = S.speed / 6 * S.ts * dt, n = Math.max(1, Math.ceil(ds / 0.04));
+    for (let i = 0; i < n; i++) step(ds / n, true);
+  }
+  top.rotation.x = theta; bot.rotation.x = -theta;
+  for (const p of plates) { const w = Math.abs(wrapPi(theta + p.alpha)); p.mat.emissiveIntensity = Math.max(0, 1 - w / 0.12) * 0.9; }
+  for (let i = fresh.length - 1; i >= 0; i--) {
+    const f = fresh[i], k = (travel - f.t0) / 2.2;
+    if (k >= 1) { f.m.material.dispose(); f.m.material = M.mark; fresh.splice(i, 1); }
+    else f.m.material.emissiveIntensity = 1.2 * (1 - k) * (1 - k);
+  }
+  if (tween) {
+    tween.t = Math.min(1, tween.t + dt / 0.9);
+    const e = tween.t < .5 ? 4 * tween.t ** 3 : 1 - (-2 * tween.t + 2) ** 3 / 2;
+    camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.t0, tween.t1, e);
+    camera.position.y += Math.sin(Math.PI * e) * tween.lift;
+    if (tween.t >= 1) tween = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  updateTags(canvas.clientWidth, canvas.clientHeight);
+  drawDev();
+  statT += dt; if (statT > 0.3) { statT = 0; liveStats(); }
+}
+frame();
+window.SIM = { stats: () => ({ stamped, bags: bags.length, plates: plates.length, travel }), view: (n, i) => goView(n, i) };
+
+</script>
+
+</body></html>
