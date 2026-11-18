@@ -178,6 +178,7 @@ table.mat td.sc{font:700 20px var(--slab);color:var(--green);white-space:nowrap}
 #simLayer header button{background:transparent;color:#E4E9EE;border:1px solid #3a4652;border-radius:3px;padding:7px 12px;font:600 13px var(--sans);cursor:pointer}
 #simLayer iframe{flex:1;width:100%;border:0;background:#0a0d10;position:static!important;height:auto!important;min-height:0}
 #simLayer>header{position:static!important;inset:auto!important;transform:none!important;margin:0!important;height:auto!important;width:auto!important;box-sizing:border-box;flex:none}
+.slide:not(.active),.slide:not(.active) *{animation-play-state:paused!important}
 </style>
 </head>
 <body>
@@ -191,7 +192,7 @@ table.mat td.sc{font:700 20px var(--slab);color:var(--green);white-space:nowrap}
 <h1 class="h1">¿Cuánto cuesta poner un número <span class="hl">en una bolsa?</span></h1>
 <p class="lead">Una gofradora de dos rodillos para marcar el número del certificado ANLA en bolsas de PEAD reciclado, <b>sin tinta</b>.</p>
 <div class="team"><div><b>Lizeth Gutiérrez</b><span>Directora del proyecto</span></div><div><b>Tatiana Alonso</b><span>Ingeniera de procesos</span></div><div><b>Georman Quintero</b><span>Ingeniero de diseño</span></div><div><b>J. Gabriel Franco</b><span>Analista técnico y económico</span></div></div></div>
-<figure class="media" style="margin-top:110px"><div class="frame"><video data-video="sim_general" muted playsinline loop preload="auto"></video></div><figcaption>Simulador 3D del equipo · la gofradora marcando la película</figcaption></figure>
+<figure class="media" style="margin-top:110px"><div class="frame"><video data-video="sim_general" muted playsinline loop preload="metadata"></video></div><figcaption>Simulador 3D del equipo · la gofradora marcando la película</figcaption></figure>
 </div></div></section>
 
 <!-- 2 · PROBLEMA -->
@@ -224,7 +225,7 @@ table.mat td.sc{font:700 20px var(--slab);color:var(--green);white-space:nowrap}
 <div class="step"><div class="badge">2</div><div><h4>Rodillo de presión</h4><p>Recubierto con 6 mm de poliuretano de 85 Shore A.</p></div></div>
 <div class="step"><div class="badge" style="background:var(--green)">3</div><div><h4>Película de PEAD</h4><p>Pasa entre los dos rodillos y sale marcada por deformación en frío.</p></div></div>
 </div></div>
-<figure class="media" style="margin-top:40px"><div class="frame"><video data-video="sim_contacto" muted playsinline loop preload="auto"></video></div><figcaption>Simulador · la placa marcando la película en la línea de contacto</figcaption></figure>
+<figure class="media" style="margin-top:40px"><div class="frame"><video data-video="sim_contacto" muted playsinline loop preload="metadata"></video></div><figcaption>Simulador · la placa marcando la película en la línea de contacto</figcaption></figure>
 </div></div></section>
 
 <!-- 5 · ASÍ MARCA (animación) -->
@@ -286,7 +287,7 @@ table.mat td.sc{font:700 20px var(--slab);color:var(--green);white-space:nowrap}
 <div class="cmp" data-f="2"><div class="l">Potencia a 60 m/min: <b>253 W</b> de 0,55 kW del motorreductor</div><div class="t"><i style="--w:46%"></i></div></div>
 <div class="pills" data-f="3" style="margin-top:6px"><span class="pill">60 m/min · 67 rpm · 30,5 N·m</span><span class="pill">Engranajes m 3 · z 94 · 1:1 · 283,45 mm entre ejes</span></div>
 <div class="note" style="margin-top:22px">8 MPa es un supuesto de diseño: se valida en el prototipo</div></div>
-<figure class="media" style="margin-top:96px"><div class="frame"><video data-video="sim_transmision" muted playsinline loop preload="auto"></video></div><figcaption>Simulador · transmisión 1:1 entre los dos rodillos</figcaption></figure>
+<figure class="media" style="margin-top:96px"><div class="frame"><video data-video="sim_transmision" muted playsinline loop preload="metadata"></video></div><figcaption>Simulador · transmisión 1:1 entre los dos rodillos</figcaption></figure>
 </div></div></section>
 
 <!-- 7 · PLACA CURVA -->
@@ -296,7 +297,7 @@ table.mat td.sc{font:700 20px var(--slab);color:var(--green);white-space:nowrap}
 <div class="card" style="padding:16px 22px"><svg class="dw" viewBox="0 0 600 190" style="width:100%;height:168px"><text x="0" y="24" style="font-weight:600;fill:#B83A2A">Placa plana: toca solo en el centro</text><path d="M40 178Q300 48 560 178"/><rect x="120" y="101" width="360" height="12" class="plate"/><path d="M128 113V142M120 113H136M120 142H136" class="hot" stroke-width="1.6"/><text x="300" y="88" text-anchor="middle" class="lbl">luz de 1,06 mm en los bordes (exagerada)</text></svg></div>
 <div class="card" style="padding:16px 22px;margin-top:16px"><svg class="dw" viewBox="0 0 600 190" style="width:100%;height:168px"><text x="0" y="24" style="font-weight:600;fill:#2B7336">Placa rolada a R 136,5 mm: apoya en todo el ancho</text><path d="M40 178Q300 48 560 178"/><path d="M120 136Q300 74 480 136" transform="translate(0 -7)" stroke="#0B3A63" stroke-width="16" stroke-linecap="butt"/><path d="M120 136Q300 74 480 136" transform="translate(0 -7)" stroke="#C9D3DD" stroke-width="12"/></svg></div>
 </div>
-<div style="padding-top:22px"><figure class="media"><div class="frame"><video data-video="sim_placas" muted playsinline loop preload="auto"></video></div><figcaption>Simulador · placas curvas sobre la malla del rodillo</figcaption></figure>
+<div style="padding-top:22px"><figure class="media"><div class="frame"><video data-video="sim_placas" muted playsinline loop preload="metadata"></video></div><figcaption>Simulador · placas curvas sobre la malla del rodillo</figcaption></figure>
 <div class="panel" style="margin-top:22px" data-f="1"><p style="margin:0 0 10px;font-size:18.5px"><b>1.152 agujeros M6</b> <span style="color:var(--ink2)">· 36 filas cada 10° · 32 columnas cada 25 mm</span></p><p style="margin:0;font-size:18.5px"><b>Placa AISI 304</b> <span style="color:var(--ink2)">· 120 × 34 × 4 mm + relieve de 1,2 mm</span></p></div></div>
 </div></div></section>
 
@@ -455,7 +456,7 @@ const times=["0:00–0:35","0:35–1:20","1:20–2:00","2:00–2:40","2:40–3:1
 const availableMedia=['sim_general','sim_contacto','sim_placas','sim_salida','sim_transmision','planta_3d'];
 const colors={'Lizeth Gutiérrez':'#0B3A63','Georman Quintero':'#2B7336','Tatiana Alonso':'#1D5486','J. Gabriel Franco':'#A86B12'};
 const $=id=>document.getElementById(id),slides=[...document.querySelectorAll('.slide')],N=slides.length,staticMode=new URLSearchParams(location.search).has('static');
-let current=Math.min(N-1,Math.max(0,(parseInt(location.hash.slice(1),10)||1)-1)),fragment=0,started=staticMode,clockStart=null,mouseTimer,touchX=null;
+let current=0,fragment=0,started=staticMode,clockStart=null,mouseTimer,touchX=null;
 if(staticMode){document.documentElement.classList.add('static');$('start').hidden=true;}
 if(new URLSearchParams(location.search).has('autostart')){started=true;$('start').hidden=true;}
 function resize(){document.documentElement.style.setProperty('--scale',Math.min(innerWidth/1600,innerHeight/900));}addEventListener('resize',resize);resize();
