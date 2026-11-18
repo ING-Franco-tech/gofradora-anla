@@ -1,3 +1,36 @@
+# Piloto con materiales recuperados: ≈ 3.067.050 COP
+
+Para validar la marca (lectura, sello y presión) no hace falta material nuevo. El piloto lo arma el equipo en el taller de la universidad, con acero de chatarrería y retales, componentes de segunda y solo los rodamientos nuevos. Valores estimados por cotizar en chatarrerías y mercado de segunda de Bogotá.
+
+| Partida | Detalle | COP |
+|---|---|---|
+| Tubo NPS 10 Sch 40 recuperado, 2 × 840 mm | 101 kg de chatarrería a ≈ 2.500/kg | 253.000 |
+| Retal de placa y ángulo: discos, laterales, base | 85 kg a ≈ 2.500/kg | 213.000 |
+| Barra SAE 1045 recuperada para muñones | 15 kg a ≈ 4.000/kg | 60.000 |
+| Retal de inoxidable 304 para bases y letras | 2,6 kg a ≈ 8.000/kg | 21.000 |
+| Rodillo de presión: rodillo de caucho recuperado (imprenta, laminadora o banda transportadora usada) | en lugar del PU colado de 1,9 M | 150.000 |
+| Husillo M20 y tornillería recuperados | | 80.000 |
+| Pintura anticorrosiva y consumibles de soldadura | | 120.000 |
+| **Materiales recuperados** | | **897.000** |
+| Motorreductor usado 0,37 a 0,5 kW | mercado de segunda | 450.000 |
+| Variador usado 0,4 kW | mercado de segunda | 250.000 |
+| 4 unidades de rodamiento UCF208 nuevas | no se recomiendan usadas | 340.000 |
+| Piñones y cadena ANSI 40 recuperados | transmisión 1:1 | 80.000 |
+| Acople | | 60.000 |
+| **Componentes de segunda** | | **1.180.000** |
+| Torneado entre centros (servicio externo, 4 h) | | 360.000 |
+| Corte láser de letras | | 150.000 |
+| Rolado de placas | | 80.000 |
+| Corte, soldadura, taladrado, pintura y ensamble | mano de obra del equipo en el taller de la universidad | 0 |
+| **Servicios externos** | | **590.000** |
+| Costo directo | | 2.667.000 |
+| Imprevistos 15 % (mayor incertidumbre del material recuperado) | | 400.050 |
+| **Total piloto** | | **3.067.050** |
+
+Cuidados del piloto: revisar el tubo recuperado (sin corrosión profunda ni abolladuras; el torneado entre centros corrige el descentramiento), probar el motor usado bajo carga antes de montarlo y medir la dureza del caucho recuperado (ideal 80–90 Shore A). Si el caucho no da la marca, se pasa al poliuretano de la versión nueva.
+
+---
+
 # Costo mínimo construible del prototipo
 
 Versión mínima de la gofradora ANLA. Parte de las tablas 21 a 24 de la tercera entrega (22.271.250 COP) y conserva el concepto: rodillo cliché de dos rodillos, tubo NPS 10 Sch 40, poliuretano 85 Shore A, placas AISI 304 atornilladas y transmisión 1:1 entre rodillos.
