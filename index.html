@@ -155,6 +155,29 @@ table.mat td.sc{font:700 20px var(--slab);color:var(--green);white-space:nowrap}
 @media(orientation:portrait) and (max-width:900px){#rotate{display:flex}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .mediafallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#C9D3DD;font-size:16px;background:#0D1620}
+
+/* ── ajustes: todo visible de una vez y acabado sobrio ── */
+[data-f]{opacity:1!important;transform:none!important;transition:none!important}
+.bar .t i{animation:none}
+.tag{border-radius:2px;background:none;padding:0 0 0 12px;border-left:3px solid var(--green)}
+.media .frame{border-radius:4px;box-shadow:none;border:1px solid #C9D3DD}
+.card{border-radius:4px;box-shadow:none}
+.panel,.sens,.callouts .panel{border-radius:4px}
+.pill{border-radius:3px}
+.note{border-radius:3px}
+.badge{border-radius:3px}
+.ask,.btn,#start button{border-radius:4px}
+.bar .t,.bar .t i,.cmp .t,.cmp .t i{border-radius:1px}
+.stack{border-radius:2px}
+#notes{border-radius:4px;box-shadow:none}
+.alts .win{background:#fff}
+#simLayer{position:fixed;inset:0;z-index:40;background:#0a0d10;display:flex;flex-direction:column}
+#simLayer[hidden]{display:none}
+#simLayer header{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#0a0d10;color:#E4E9EE;font:600 14px var(--sans);border-bottom:1px solid #27313a}
+#simLayer header span{margin-right:auto;opacity:.75;font-weight:500}
+#simLayer header button{background:transparent;color:#E4E9EE;border:1px solid #3a4652;border-radius:3px;padding:7px 12px;font:600 13px var(--sans);cursor:pointer}
+#simLayer iframe{flex:1;width:100%;border:0;background:#0a0d10;position:static!important;height:auto!important;min-height:0}
+#simLayer>header{position:static!important;inset:auto!important;transform:none!important;margin:0!important;height:auto!important;width:auto!important;box-sizing:border-box;flex:none}
 </style>
 </head>
 <body>
@@ -362,7 +385,7 @@ table.mat td.sc{font:700 20px var(--slab);color:var(--green);white-space:nowrap}
 <div style="padding-top:30px"><span class="tag">Simulador del equipo</span><h2 class="h2" style="font-size:42px">Así trabaja <span class="hl">en la línea</span></h2>
 <div class="num" id="takeLabel" style="font-size:40px;line-height:1.2;color:var(--green);min-height:100px">2 placas por vuelta</div>
 <p class="lead" style="font-size:20px">Una marca cada 445,2 mm a 60 m/min, sin tinta.</p>
-<a class="btn" style="margin-top:26px" href="sim/gofradora_anla.html" target="_blank" rel="noopener">Abrir el simulador</a></div>
+<a class="btn" style="margin-top:26px" href="sim/gofradora_anla.html" data-sim>Abrir el simulador</a></div>
 <figure class="media" style="margin-top:10px"><div class="frame"><video class="montage" data-video="sim_general" muted playsinline preload="auto"></video></div><figcaption>Tomas del simulador 3D: vista general, contacto, salida y transmisión</figcaption></figure>
 </div></div></section>
 
@@ -408,6 +431,7 @@ table.mat td.sc{font:700 20px var(--slab);color:var(--green);white-space:nowrap}
 <aside id="notes" hidden aria-label="Guion del expositor"><div id="notesHead"><strong id="noteSpeaker"></strong><span id="noteTime"></span><time id="clock">00:00</time></div><p id="noteText"></p><div id="nextSpeaker"></div></aside><button id="notesButton" aria-controls="notes" aria-expanded="false">Notas</button>
 <div id="start"><img src="assets/logo_quadra.png" alt="Quadra Ingeniería S.A.S."><h1 class="h1">Gofradora ANLA</h1><p class="lead">Capstone Design · Proyecto para Carlixplast S.A.S.</p><div style="margin-top:22px"><button id="begin">Iniciar</button><button id="beginFull">Iniciar en pantalla completa</button></div><p class="small">→ avanzar · ← volver · N guion · R reiniciar reloj · F pantalla completa</p></div>
 </main><div id="rotate">Gira el teléfono para ver la presentación en horizontal.</div>
+<div id="simLayer" hidden role="dialog" aria-label="Simulador de la gofradora"><header><span>Simulador · Gofradora ANLA</span><button type="button" id="simExit">Volver a la presentación (Esc)</button></header><iframe id="simFrame" title="Simulador de la gofradora" allow="fullscreen"></iframe></div>
 <script>
 'use strict';
 const notes=[
@@ -439,7 +463,7 @@ const segments=slides.map(()=>{const el=document.createElement('i');$('progress'
 function groups(){return [...new Set([...slides[current].querySelectorAll('[data-f]')].map(e=>Number(e.dataset.f)))].sort((a,b)=>a-b);}
 function updateFragments(){const g=groups();slides[current].querySelectorAll('[data-f]').forEach(e=>e.classList.toggle('shown',staticMode||g.indexOf(Number(e.dataset.f))<fragment));}
 function safePlay(v){const p=v.play();if(p)p.catch(()=>{});}
-function show(index,back=false){slides.forEach((s,i)=>{s.classList.toggle('active',i===index);s.setAttribute('aria-hidden',String(i!==index));s.querySelectorAll('video').forEach(v=>v.pause());});current=index;fragment=back||staticMode?groups().length:0;updateFragments();const sp=slides[current].dataset.speaker;document.documentElement.style.setProperty('--speaker',colors[sp]);$('speaker').textContent=sp;$('counter').textContent=String(current+1).padStart(2,'0')+' / '+N;$('source').textContent=slides[current].dataset.src;$('noteSpeaker').textContent=speakers[current];$('noteTime').textContent=times[current];$('noteText').textContent=notes[current];$('nextSpeaker').textContent=current<N-1&&speakers[current+1]!==speakers[current]?'Sigue: '+speakers[current+1]:'';segments.forEach((s,i)=>{s.classList.toggle('past',i<current);s.classList.toggle('current',i===current);});history.replaceState(null,'','#'+(current+1));slides[current].querySelectorAll('video').forEach(v=>{v.currentTime=staticMode?0.5:0;if(!staticMode&&started)safePlay(v);});}
+function show(index,back=false){slides.forEach((s,i)=>{s.classList.toggle('active',i===index);s.setAttribute('aria-hidden',String(i!==index));s.querySelectorAll('video').forEach(v=>v.pause());});current=index;fragment=groups().length;updateFragments();const sp=slides[current].dataset.speaker;document.documentElement.style.setProperty('--speaker',colors[sp]);$('speaker').textContent=sp;$('counter').textContent=String(current+1).padStart(2,'0')+' / '+N;$('source').textContent=slides[current].dataset.src;$('noteSpeaker').textContent=speakers[current];$('noteTime').textContent=times[current];$('noteText').textContent=notes[current];$('nextSpeaker').textContent=current<N-1&&speakers[current+1]!==speakers[current]?'Sigue: '+speakers[current+1]:'';segments.forEach((s,i)=>{s.classList.toggle('past',i<current);s.classList.toggle('current',i===current);});history.replaceState(null,'','#'+(current+1));slides[current].querySelectorAll('video').forEach(v=>{v.currentTime=staticMode?0.5:0;if(!staticMode&&started)safePlay(v);});}
 function next(){if(!started){begin(false);return;}if(clockStart===null)clockStart=performance.now();if(fragment<groups().length){fragment++;updateFragments();}else if(current<N-1)show(current+1);}
 function prev(){if(!started)return;if(fragment>0){fragment--;updateFragments();}else if(current>0)show(current-1,true);}
 async function fullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch(e){}}
@@ -447,7 +471,7 @@ function begin(full){started=true;$('start').hidden=true;if(full)fullscreen();if
 function setNotes(on){$('notes').hidden=!on;$('notesButton').setAttribute('aria-expanded',String(on));if(!staticMode)try{localStorage.setItem('quadra-notes',String(on));}catch(e){}}
 if(!staticMode)try{setNotes(localStorage.getItem('quadra-notes')==='true');}catch(e){}
 $('notesButton').onclick=()=>setNotes($('notes').hidden);$('begin').onclick=()=>begin(false);$('beginFull').onclick=()=>begin(true);
-document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey)return;const k=e.key.toLowerCase();if(['arrowright',' ','pagedown','arrowleft','pageup','home','end','n','r','p','f'].includes(k))e.preventDefault();if(['arrowright',' ','pagedown'].includes(k))next();else if(['arrowleft','pageup'].includes(k))prev();else if(k==='home'){begin(false);show(0);}else if(k==='end'){begin(false);show(N-1,true);}else if(k==='n')setNotes($('notes').hidden);else if(k==='r'){clockStart=clockStart===null?null:performance.now();$('clock').textContent='00:00';}else if(k==='f'||k==='p')fullscreen();});
+document.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey)return;if(!document.getElementById('simLayer').hidden)return;const k=e.key.toLowerCase();if(['arrowright',' ','pagedown','arrowleft','pageup','home','end','n','r','p','f'].includes(k))e.preventDefault();if(['arrowright',' ','pagedown'].includes(k))next();else if(['arrowleft','pageup'].includes(k))prev();else if(k==='home'){begin(false);show(0);}else if(k==='end'){begin(false);show(N-1,true);}else if(k==='n')setNotes($('notes').hidden);else if(k==='r'){clockStart=clockStart===null?null:performance.now();$('clock').textContent='00:00';}else if(k==='f'||k==='p')fullscreen();});
 const interactive=e=>e.target.closest('button,a,#notes,#start');$('stage').addEventListener('click',e=>{if(!interactive(e))prev();});$('stage').addEventListener('contextmenu',e=>{if(!interactive(e)){e.preventDefault();next();}});
 document.addEventListener('mousemove',()=>{document.body.classList.add('mouse');clearTimeout(mouseTimer);mouseTimer=setTimeout(()=>document.body.classList.remove('mouse'),1700);});
 $('stage').addEventListener('touchstart',e=>{if(!interactive(e))touchX=e.changedTouches[0].clientX;},{passive:true});$('stage').addEventListener('touchend',e=>{if(touchX===null)return;const dx=e.changedTouches[0].clientX-touchX;touchX=null;if(Math.abs(dx)>40){if(e.cancelable)e.preventDefault();dx<0?next():prev();}},{passive:false});
@@ -458,6 +482,14 @@ const montage=document.querySelector('.montage'),montageSlide=slides.indexOf(mon
 montage.addEventListener('ended',()=>{if(staticMode||!started||current!==montageSlide)return;take=(take+1)%takes.length;montage.src='assets/'+takes[take]+'.mp4';$('takeLabel').textContent=labels[take];safePlay(montage);});
 addEventListener('hashchange',()=>show(Math.min(N-1,Math.max(0,(parseInt(location.hash.slice(1),10)||1)-1))));
 show(current);
+
+(function(){const L=document.getElementById('simLayer'),F=document.getElementById('simFrame');
+function close(){L.hidden=true;F.src='about:blank';if(document.fullscreenElement===L)document.exitFullscreen().catch(()=>{});}
+function open(href){F.src=href;L.hidden=false;if(L.requestFullscreen)L.requestFullscreen().catch(()=>{});setTimeout(()=>F.focus(),300);}
+document.querySelectorAll('a[data-sim]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open(a.getAttribute('href'));}));
+document.getElementById('simExit').addEventListener('click',close);
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&!L.hidden)close();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!L.hidden)close();},true);})();
 </script>
 </body>
 </html>
