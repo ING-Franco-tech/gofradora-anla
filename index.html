@@ -386,7 +386,7 @@ table.mat td.sc{font:700 20px var(--slab);color:var(--green);white-space:nowrap}
 <div class="num" id="takeLabel" style="font-size:40px;line-height:1.2;color:var(--green);min-height:100px">2 placas por vuelta</div>
 <p class="lead" style="font-size:20px">Una marca cada 445,2 mm a 60 m/min, sin tinta.</p>
 <a class="btn" style="margin-top:26px" href="sim/gofradora_anla.html" data-sim>Abrir el simulador</a></div>
-<figure class="media" style="margin-top:10px"><div class="frame"><video class="montage" data-video="sim_general" muted playsinline preload="auto"></video></div><figcaption>Tomas del simulador 3D: vista general, contacto, salida y transmisión</figcaption></figure>
+<figure class="media" style="margin-top:10px"><div class="frame"><video class="planta" data-video="planta_3d" muted playsinline loop preload="auto"></video></div><figcaption>Animación de planta en 3D: entrada, marcado, transmisión, velocidad, cambio de bolsa y posición de la marca</figcaption></figure>
 </div></div></section>
 
 <!-- 13 · VERIFICACIÓN -->
@@ -452,7 +452,7 @@ const notes=[
 "Rodillo cliché: 8,55 sobre 10. Sin tinta, sin solvente, sin calor. El número cambia cada año cambiando placas. 22,3 millones. Siguiente paso: el prototipo y los ensayos de lectura, sello y presión. Gracias. Quedamos atentos a sus preguntas."];
 const speakers=["Lizeth Gutiérrez","Lizeth Gutiérrez","Lizeth Gutiérrez","Georman Quintero","Georman Quintero","Georman Quintero","Georman Quintero","Tatiana Alonso","Tatiana Alonso","J. Gabriel Franco","J. Gabriel Franco","J. Gabriel Franco","J. Gabriel Franco","J. Gabriel Franco","J. Gabriel Franco"];
 const times=["0:00–0:35","0:35–1:20","1:20–2:00","2:00–2:40","2:40–3:10","3:10–3:55","3:55–4:30","4:30–5:30","5:30–6:30","6:30–7:00","7:00–8:10","8:10–8:45","8:45–9:45","9:45–10:25","10:25–11:00"];
-const availableMedia=['sim_general','sim_contacto','sim_placas','sim_salida','sim_transmision'];
+const availableMedia=['sim_general','sim_contacto','sim_placas','sim_salida','sim_transmision','planta_3d'];
 const colors={'Lizeth Gutiérrez':'#0B3A63','Georman Quintero':'#2B7336','Tatiana Alonso':'#1D5486','J. Gabriel Franco':'#A86B12'};
 const $=id=>document.getElementById(id),slides=[...document.querySelectorAll('.slide')],N=slides.length,staticMode=new URLSearchParams(location.search).has('static');
 let current=Math.min(N-1,Math.max(0,(parseInt(location.hash.slice(1),10)||1)-1)),fragment=0,started=staticMode,clockStart=null,mouseTimer,touchX=null;
@@ -478,8 +478,8 @@ $('stage').addEventListener('touchstart',e=>{if(!interactive(e))touchX=e.changed
 setInterval(()=>{if(clockStart===null)return;const s=Math.floor((performance.now()-clockStart)/1000);$('clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},250);
 function fallback(v){const f=v.parentElement;if(f.querySelector('.mediafallback'))return;const d=document.createElement('div');d.className='mediafallback';d.textContent='Toma del simulador no disponible';f.append(d);}
 document.querySelectorAll('video[data-video]').forEach(v=>{v.addEventListener('error',()=>fallback(v));v.addEventListener('loadedmetadata',()=>{if(staticMode)v.currentTime=0.5;});if(availableMedia.includes(v.dataset.video))v.src='assets/'+v.dataset.video+'.mp4';else fallback(v);});
-const montage=document.querySelector('.montage'),montageSlide=slides.indexOf(montage.closest('.slide')),takes=['sim_general','sim_contacto','sim_salida','sim_transmision'],labels=['2 placas por vuelta','Una marca cada 445,2 mm','Bolsas marcadas a la salida','Transmisión 1:1 · 67 rpm'];let take=0;
-montage.addEventListener('ended',()=>{if(staticMode||!started||current!==montageSlide)return;take=(take+1)%takes.length;montage.src='assets/'+takes[take]+'.mp4';$('takeLabel').textContent=labels[take];safePlay(montage);});
+const montage=document.querySelector('.montage'),montageSlide=montage?slides.indexOf(montage.closest('.slide')):-1,takes=['sim_general','sim_contacto','sim_salida','sim_transmision'],labels=['2 placas por vuelta','Una marca cada 445,2 mm','Bolsas marcadas a la salida','Transmisión 1:1 · 67 rpm'];let take=0;
+if(montage)montage.addEventListener('ended',()=>{if(staticMode||!started||current!==montageSlide)return;take=(take+1)%takes.length;montage.src='assets/'+takes[take]+'.mp4';$('takeLabel').textContent=labels[take];safePlay(montage);});
 addEventListener('hashchange',()=>show(Math.min(N-1,Math.max(0,(parseInt(location.hash.slice(1),10)||1)-1))));
 show(current);
 
